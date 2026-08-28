@@ -3,506 +3,746 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Orçamentos & Gestão - Gráfica Rápida</title>
+    <title>Sua Gráfica Express - Portal & Gestão</title>
     <style>
+        /* --- ESTILOS GLOBAIS E VARIÁVEIS --- */
         :root {
-            --primary: #0f172a;
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --bg: #f1f5f9;
+            --primary: #1a73e8;
+            --primary-hover: #1557b0;
+            --success: #137333;
+            --warning: #b35c00;
+            --danger: #d93025;
+            --dark: #202124;
+            --gray-bg: #f8f9fa;
             --card-bg: #ffffff;
-            --text: #334155;
-            --border: #cbd5e1;
-            --success: #10b981;
-            --danger: #ef4444;
+            --border: #dadce0;
+            --text: #3c4043;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        
-        .container { max-width: 1500px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
-        
-        header {
-            grid-column: 1 / -1; background: var(--primary); color: white; padding: 20px 25px; 
-            border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-        input, select { width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
-        input:focus, select:focus { border-color: var(--accent); outline: none; }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        body {
+            background-color: var(--gray-bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        .checkbox-group { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px; }
-        .checkbox-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; }
-        .checkbox-item input { width: auto; }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
 
-        button { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: var(--accent-hover); }
+        /* --- COMPONENTES VISUAIS (CARDS E BOTÕES) --- */
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-        .receipt { border: 2px dashed #cbd5e1; padding: 20px; background: #fff; min-height: 250px; border-radius: 8px; }
-        .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; }
-        .total-box { background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; color: var(--primary); border-left: 5px solid var(--accent); }
+        .header h1 { font-size: 28px; font-weight: 600; }
+        .header p { opacity: 0.9; font-size: 14px; margin-top: 5px; }
 
-        .actions { margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 10px; }
-        .btn-print { background: var(--success); } .btn-print:hover { background: #059669; }
-        .btn-logout { background: var(--danger); color: white; width: auto; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; border: none; }
-        .btn-del { background: var(--danger); padding: 5px 10px; font-size: 12px; border-radius: 4px; width: auto; color: white; cursor: pointer; border: none; }
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-nav {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-nav:hover { background: rgba(255,255,255,0.3); }
+        .btn-nav.active { background: white; color: var(--primary); font-weight: 600; }
 
-        .panel-card { grid-column: 1 / -1; }
-        .system-section { display: none; grid-column: 1 / -1; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-bg);
+            padding-bottom: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        /* --- FORMULÁRIOS --- */
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .checkbox-group {
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; padding: 6px 12px; font-size: 12px; }
+
+        /* --- TABELAS --- */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th, td { padding: 14px; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--gray-bg); color: var(--dark); font-weight: 600; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { background-color: #ededed; }
+
+        /* --- STATUS COLORIDOS --- */
+        .status-select {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .status-pendente { background-color: #ffe6cc; color: var(--warning); }
+        .status-aprovado { background-color: #e6f4ea; color: var(--success); }
+        .status-andamento { background-color: #e8f0fe; color: var(--primary); }
+        .status-entregue { background-color: #f1f3f4; color: #5f6368; }
+
+        /* --- DASHBOARDS / METRICAS --- */
+        .dash-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .dash-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--gray-bg);
+        }
+        .dash-card h4 { font-size: 13px; text-transform: uppercase; color: #5f6368; font-weight: 500; }
+        .dash-card p { font-size: 22px; font-weight: bold; color: var(--dark); margin-top: 8px; }
+        .dash-card.highlight-blue { background-color: #e8f0fe; border-color: #d2e3fc; }
+        .dash-card.highlight-blue p { color: var(--primary); }
+        .dash-card.highlight-green { background-color: #e6f4ea; border-color: #c2e7cb; }
+        .dash-card.highlight-green p { color: var(--success); }
+
+        /* --- VISIBILIDADE DAS TELAS --- */
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
         
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 15px; }
-        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; color: var(--primary); }
-        .badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; grid-column: 1/-1; flex-wrap: wrap; background: #cbd5e1; padding: 8px; border-radius: 8px; }
-        .tab-btn { background: transparent; color: var(--text); width: auto; padding: 10px 20px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; }
-        .tab-btn.active { background: var(--accent); color: white; }
-
-        .preview-logo { max-width: 80px; max-height: 80px; object-fit: contain; border: 1px solid var(--border); border-radius: 4px; display: none; }
-        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .report-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; }
-        .report-box h3 { font-size: 14px; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .report-box p { font-size: 28px; font-weight: bold; color: var(--primary); }
+        .login-box {
+            max-width: 400px;
+            margin: 60px auto;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
+    <!-- CABEÇALHO GLOBAL -->
+    <header class="header">
         <div>
             <h1>Sua Gráfica Express</h1>
-            <p>Portal Público & Sistema de Gestão Interna</p>
+            <p>Portal Público de Orçamentos & Gestão Corporativa</p>
         </div>
-        <div id="auth-status-area">
-            <span id="user-display" style="color:#94a3b8; font-size: 14px;">Painel Restrito Fechado</span>
+        <div class="nav-buttons">
+            <button class="btn-nav active" id="btnViewCliente" onclick="mudarTela('cliente')">🌐 Área do Cliente</button>
+            <button class="btn-nav" id="btnViewRestrita" onclick="mudarTela('login')">🔐 Painel da Empresa</button>
         </div>
     </header>
 
-    <!-- NAVEGAÇÃO PRINCIPAL -->
-    <div class="tabs">
-        <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Área do Cliente (Acesso Livre)</button>
-        <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Painel da Empresa (Restrito)</button>
-        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
-        <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
-        <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
-    </div>
+    <!-- ================= VISTA DO CLIENTE ================= -->
+    <main id="telaCliente" class="view-section active-view">
+        <div class="grid-2">
+            <!-- Formulário de Orçamento -->
+            <section class="card">
+                <h2>📊 Faça Seu Orçamento na Hora</h2>
+                <form id="formOrcamento" onsubmit="event.preventDefault(); processarOrcamentoProvisorio();">
+                    <div class="form-group">
+                        <label for="cNome">Seu Nome / Nome da Empresa</label>
+                        <input type="text" id="cNome" class="form-control" placeholder="Insira seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cWhats">Seu WhatsApp de Contato</label>
+                        <input type="text" id="cWhats" class="form-control" placeholder="Ex: 11999999999" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cServico">Qual serviço deseja realizar?</label>
+                        <select id="cServico" class="form-control" onchange="verificarCamposDimensoes()">
+                            <!-- Alimentado dinamicamente via JS -->
+                        </select>
+                    </div>
+                    
+                    <!-- Campos de Dimensões Condicionais -->
+                    <div class="grid-2" id="boxDimensoes" style="gap: 10px; margin-bottom: 0;">
+                        <div class="form-group" style="grid-column: span 1;">
+                            <label for="cLargura">Largura da Arte (metros)</label>
+                            <input type="number" id="cLargura" class="form-control" value="1.00" min="0.05" step="0.01">
+                        </div>
+                        <div class="form-group" style="grid-column: span 1;">
+                            <label for="cAltura">Altura da Arte (metros)</label>
+                            <input type="number" id="cAltura" class="form-control" value="1.00" min="0.05" step="0.01">
+                        </div>
+                    </div>
 
-    <!-- 🌐 ABA 1: PORTAL DO CLIENTE -->
-    <div id="section-cliente-portal" class="system-section" style="display: contents;">
-        <div class="card">
-            <h2>📊 Faça Seu Orçamento na Hora</h2>
-            <form id="orcamentoForm">
-                <div class="form-group"><label>Seu Nome / Nome da Empresa</label><input type="text" id="venda-cliente" placeholder="Ex: João da Silva" required></div>
-                <div class="form-group"><label>Seu WhatsApp de Contato</label><input type="text" id="venda-tel" placeholder="(00) 00000-0000" required></div>
-                
-                <div class="form-group">
-                    <label>Qual serviço deseja realizar?</label>
-                    <select id="venda-servico" required><option value="">Carregando produtos disponíveis...</option></select>
-                </div>
-                
-                <div id="dimensoes-container">
-                    <div class="row form-group">
-                        <div><label>Largura da Arte (metros)</label><input type="number" id="largura" step="0.01" value="1.00"></div>
-                        <div><label>Altura da Arte (metros)</label><input type="number" id="altura" step="0.01" value="1.00"></div>
+                    <div class="form-group">
+                        <label for="cQtd">Quantidade de Itens</label>
+                        <input type="number" id="cQtd" class="form-control" value="1" min="1" required>
                     </div>
-                </div>
-                <div class="form-group"><label>Quantidade de Itens</label><input type="number" id="quantidade" value="1" min="1" required></div>
-                
-                <div class="form-group" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed var(--border);">
-                    <label>🖼️ Enviar Logotipo ou Referência da Arte (Opcional)</label>
-                    <input type="file" id="venda-logo" accept="image/*" onchange="previewLogoUpload(this)">
-                    <div style="margin-top: 10px; text-align: center;">
-                        <img id="logo-preview-element" class="preview-logo" alt="Preview">
-                    </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Acabamentos Adicionais</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-item"><input type="checkbox" id="acab_bastao" value="15.00"> Preciso de Bastão e Cordão (+R$ 15,00)</label>
-                        <label class="checkbox-item"><input type="checkbox" id="acab_ilhos" value="10.00"> Preciso de Ilhós nas Bordas (+R$ 10,00)</label>
-                        <label class="checkbox-item"><input type="checkbox" id="acab_instalacao" value="180.00"> Preciso que instalem no local (+R$ 180,00)</label>
+                    <div class="form-group">
+                        <label>Acabamentos Adicionais</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" id="acab1" value="15.00"> Preciso de Bastão e Cordão (+R$ 15,00)</label>
+                            <label class="checkbox-item"><input type="checkbox" id="acab2" value="10.00"> Preciso de Ilhós nas Bordas (+R$ 10,00)</label>
+                            <label class="checkbox-item"><input type="checkbox" id="acab3" value="180.00"> Preciso que instalem no local (+R$ 180,00)</label>
+                        </div>
                     </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Calcular Valor do Orçamento</button>
+                </form>
+            </section>
+
+            <!-- Resumo e Envio -->
+            <section class="card" style="background-color: #fafafa;">
+                <h2>📄 Seu Resumo Provisório</h2>
+                <div id="wrapperResumo" style="line-height: 1.6; min-height: 120px; display: flex; align-items: center; color: #5f6368;">
+                    Preencha os campos ao lado e clique em Calcular para visualizar os valores.
                 </div>
-                <button type="button" onclick="gerarOrcamento()">Calcular Valor do Orçamento</button>
+                <div id="boxAcaoEnvio" style="display: none; margin-top: 20px;">
+                    <button onclick="enviarPedidoAdministracao()" class="btn btn-success" style="width: 100%;">🚀 Enviar Pedido para Aprovação</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ================= TELA DE LOGIN INTERMEDIÁRIA ================= -->
+    <section id="telaLogin" class="view-section">
+        <div class="card login-box">
+            <h2>🔐 Login de Funcionário / Admin</h2>
+            <form onsubmit="event.preventDefault(); executingAuthentication();">
+                <div class="form-group">
+                    <label for="loginEmail">E-mail Corporativo</label>
+                    <input type="email" id="loginEmail" class="form-control" required placeholder="admin@grafica.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginSenha">Senha</label>
+                    <input type="password" id="loginSenha" class="form-control" required placeholder="••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar no Painel Administrativo</button>
             </form>
         </div>
+    </section>
 
-        <div class="card">
-            <h2>📄 Seu Resumo Provisório</h2>
-            <div class="receipt" id="recibo">
-                <div id="recibo-conteudo" style="text-align: center; padding-top: 50px; color: #94a3b8;">Preencha os campos ao lado e clique em Calcular.</div>
-            </div>
-            <div class="actions">
-                <button class="btn-print" style="background: var(--accent);" onclick="salvarOrcamentoBD()">🚀 Enviar Pedido para Aprovação</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🔐 ABA 2: TELA DE LOGIN DA EMPRESA -->
-    <div id="section-login" class="system-section">
-        <div class="card" style="max-width: 450px; margin: 40px auto;">
-            <h2>🔐 Login de Funcionário / Admin</h2>
-            <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
-            <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
-            <button onclick="login()">Entrar no Painel Administrativo</button>
-        </div>
-    </div>
-
-    <!-- 📥 ABA 3: PEDIDOS RECEBIDOS -->
-    <div id="section-pedidos" class="system-section">
-        <div class="card panel-card">
+    <!-- ================= ÁREA RESTRITA (PAINEL ADMINISTRATIVO) ================= -->
+    <main id="telaRestrita" class="view-section">
+        
+        <!-- SEÇÃO: PEDIDOS RECEBIDOS -->
+        <section class="card">
             <h2>📥 Orçamentos e Pedidos Enviados por Clientes</h2>
-            <div style="overflow-x: auto;">
+            <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Ações</th></tr></thead>
-                    <tbody id="lista-orcamentos"></tbody>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="alternarOrdenacaoPedidosData()">Data ↕</th>
+                            <th>Cliente / WhatsApp</th>
+                            <th>Serviço Solicitado</th>
+                            <th>Dimensões</th>
+                            <th>Qtd</th>
+                            <th>Valor Calculado</th>
+                            <th>Status do Andamento</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaPedidosCorpo">
+                        <!-- Alimentado via JS -->
+                    </tbody>
                 </table>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- 🛠️ ABA 4: CONFIGURAÇÃO DE SERVIÇOS -->
-    <div id="section-servicos" class="system-section">
-        <div class="card">
-            <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
-            <div class="row">
-                <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
+        <!-- SEÇÃO: FILTRO E RELATÓRIOS GERENCIAIS -->
+        <section class="card" style="border-left: 5px solid var(--primary);">
+            <h2>📈 Relatórios Gerenciais por Data de Serviços</h2>
+            <p style="font-size: 13px; color: #5f6368; margin-top: -15px; margin-bottom: 20px;">
+                Filtre os dados por período corporativo. Por padrão do sistema, as buscas consolidam as etapas de <strong>"Serviço Aprovado"</strong> e <strong>"Serviço em Andamento"</strong>.
+            </p>
+            
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 150px;" class="form-group">
+                    <label>Data Inicial</label>
+                    <input type="date" id="repDataInicio" class="form-control">
+                </div>
+                <div style="flex: 1; min-width: 150px;" class="form-group">
+                    <label>Data Final</label>
+                    <input type="date" id="repDataFim" class="form-control">
+                </div>
+                <div style="flex: 1; min-width: 200px;" class="form-group">
+                    <label>Filtro de Fases</label>
+                    <select id="repStatusFiltro" class="form-control">
+                        <option value="Aprovado_Andamento">Serviço Aprovado + Em Andamento</option>
+                        <option value="Todos">Todos os Status (Visão Geral)</option>
+                        <option value="Pendente">Apenas Orçamentos Pendentes</option>
+                        <option value="Aprovado">Apenas Serviços Aprovados</option>
+                        <option value="Em Andamento">Apenas Serviços em Andamento</option>
+                        <option value="Entregue">Apenas Serviços Entregues</option>
+                    </select>
+                </div>
                 <div class="form-group">
-                    <label>Tipo de Cálculo</label>
-                    <select id="s-tipo"><option value="m2">Por Metro Quadrado (M²)</option><option value="unidade">Por Unidade Fixa</option></select>
+                    <button onclick="gerarRelatorioFiltrado()" class="btn btn-primary" style="height: 40px; padding: 0 25px;">Filtrar Demandas</button>
                 </div>
             </div>
-            <div class="form-group"><label>Preço Base de Venda (R$)</label><input type="number" id="s-preco" step="0.01"></div>
-            <button onclick="cadastrarServico()">Salvar na Tabela de Preços</button>
-        </div>
-        <div class="card">
-            <h2>📋 Tabela de Preços Atual (Visível para os clientes)</h2>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead><tr><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Ações</th></tr></thead>
-                    <tbody id="lista-servicos"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
-    <!-- 📈 ABA 5: RELATÓRIOS -->
-    <div id="section-relatorios" class="system-section">
-        <div class="card panel-card">
-            <h2>📈 Desempenho e Caixa da Gráfica</h2>
-            <div class="report-grid">
-                <div class="report-box"><h3>Faturamento Bruto (Pedidos Salvos)</h3><p id="rep-faturamento">R$ 0,00</p></div>
-                <div class="report-box"><h3>Volume Total de Demandas</h3><p id="rep-pedidos">0</p></div>
-                <div class="report-box"><h3>Ticket Médio Praticado</h3><p id="rep-ticket">R$ 0,00</p></div>
+            <div class="dash-container">
+                <div class="dash-card highlight-blue">
+                    <h4>Volume Filtrado no Período</h4>
+                    <p id="repVolume">0</p>
+                </div>
+                <div class="dash-card highlight-green">
+                    <h4>Faturamento Bruto Consolidado</h4>
+                    <p id="repFaturamento">R$ 0,00</p>
+                </div>
             </div>
+        </section>
+
+        <div class="grid-2">
+            <!-- SEÇÃO: CADASTRO DE PREÇOS -->
+            <section class="card">
+                <h2>🛠 Cadastrar Novo Serviço ou Mudar Preços</h2>
+                <form onsubmit="event.preventDefault(); adicionarNovoServicoPreco();">
+                    <div class="form-group">
+                        <label for="pNome">Nome do Serviço (Ex: Banner em Lona)</label>
+                        <input type="text" id="pNome" class="form-control" required placeholder="Ex: Banner em Lona de Alta Definição">
+                    </div>
+                    <div class="form-group">
+                        <label for="pTipo">Tipo de Cálculo</label>
+                        <select id="pTipo" class="form-control">
+                            <option value="m2">Por Metro Quadrado (M²)</option>
+                            <option value="fixo">Por Unidade Fixa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pPreco">Preço Base de Venda (R$)</label>
+                        <input type="number" id="pPreco" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Salvar na Tabela de Preços</button>
+                </form>
+            </section>
+
+            <!-- SEÇÃO: TABELA DE PREÇOS ATUAL -->
+            <section class="card">
+                <h2>📋 Tabela de Preços Atual (Visível para os clientes)</h2>
+                <div class="table-responsive" style="max-height: 290px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serviço/Produto</th>
+                                <th>Forma de Cobrança</th>
+                                <th>Preço Base</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaPrecosCorpo">
+                            <!-- Alimentado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
-    </div>
+
+        <!-- SEÇÃO: DESEMPENHO E CAIXA HISTÓRICO GERAL -->
+        <section class="card">
+            <h2>📈 Desempenho e Caixa Geral Histórico da Gráfica</h2>
+            <div class="dash-container">
+                <div class="dash-card">
+                    <h4>Faturamento Bruto Total acumulado</h4>
+                    <p id="geralFaturamento">R$ 0,00</p>
+                </div>
+                <div class="dash-card">
+                    <h4>Volume Total de Demandas</h4>
+                    <p id="geralVolume">0</p>
+                </div>
+                <div class="dash-card">
+                    <h4>Ticket Médio Praticado</h4>
+                    <p id="geralTicket">R$ 0,00</p>
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
 
-<!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<!-- ================= ENGENHARIA DE LOGICA (JAVASCRIPT) ================= -->
+<script>
+    /* --- ESTRUTURA DE BANCO DE DADOS LOCAL (LOCALSTORAGE) --- */
+    let bancoPrecos = JSON.parse(localStorage.getItem('gf_precos')) || [
+        { id: 1, nome: "Banner em Lona", tipo: "m2", preco: 45.00 },
+        { id: 2, nome: "Adesivo Vinil Perfurado", tipo: "m2", preco: 38.00 },
+        { id: 3, nome: "Panfletos 10x14cm (Milheiro)", tipo: "fixo", preco: 150.00 }
+    ];
 
-    // CONFIGURAÇÕES DO FIREBASE CONECTADAS
-    const firebaseConfig = {
-        apiKey: "AIzaSyDB9WA3vYMW0IlwF0Fo8Aa9GhR0z6bAk6U",
-        authDomain: "portal-grafica-pro.firebaseapp.com",
-        projectId: "portal-grafica-pro",
-        storageBucket: "portal-grafica-pro.firebasestorage.app",
-        messagingSenderId: "410825484242",
-        appId: "1:410825484242:web:77114cb5a893cb20b94a0b"
+    let bancoPedidos = JSON.parse(localStorage.getItem('gf_pedidos')) || [];
+    let pedidoRascunho = null;
+    let ordemDataCrescente = false;
+
+    window.onload = function() {
+        atualizarMenuSelecaoProdutos();
+        renderizarTabelaPrecos();
+        renderizarTabelaPedidos();
+        configurarDatasPadraoRelatorios();
+        recalcularMetricasGeraisCaixa();
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    function mudarTela(destino) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-view'));
+        document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
 
-    let cacheServicos = {};
-    let orcamentoAtual = null;
-    let base64LogoData = ""; 
-
-    // --- AUTENTICAÇÃO INTERNA ---
-    window.login = function() {
-        const email = document.getElementById('login-email').value;
-        const senha = document.getElementById('login-senha').value;
-        if(!email || !senha) { alert("Preencha o e-mail e senha."); return; }
-        
-        signInWithEmailAndPassword(auth, email, senha)
-            .then(() => { 
-                alert("Acesso autorizado!"); 
-                switchTab('pedidos'); 
-            })
-            .catch(e => alert("Acesso negado: dados incorretos ou erro de conexão."));
-    }
-    
-    window.logoutProcess = function() { 
-        signOut(auth).then(() => {
-            alert("Sessão encerrada!");
-        }); 
+        if(destino === 'cliente') {
+            document.getElementById('telaCliente').classList.add('active-view');
+            document.getElementById('btnViewCliente').classList.add('active');
+        } else if(destino === 'login') {
+            document.getElementById('telaLogin').classList.add('active-view');
+            document.getElementById('btnViewRestrita').classList.add('active');
+        } else if(destino === 'restrita') {
+            document.getElementById('telaRestrita').classList.add('active-view');
+            document.getElementById('btnViewRestrita').classList.add('active');
+        }
     }
 
-    onAuthStateChanged(auth, (user) => {
-        const loginBtn = document.getElementById('tab-login-btn');
-        const statusArea = document.getElementById('auth-status-area');
-        
-        if (user) {
-            loginBtn.style.display = 'none';
-            document.getElementById('tab-pedidos-btn').style.display = 'block';
-            document.getElementById('tab-servicos-btn').style.display = 'block';
-            document.getElementById('tab-relatorios-btn').style.display = 'block';
-            statusArea.innerHTML = `<span style="color:#10b981; font-weight:bold; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
+    function executingAuthentication() {
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+
+        if(email === 'admin@grafica.com' && senha === '123456') {
+            mudarTela('restrita');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
         } else {
-            loginBtn.style.display = 'block';
-            document.getElementById('tab-pedidos-btn').style.display = 'none';
-            document.getElementById('tab-servicos-btn').style.display = 'none';
-            document.getElementById('tab-relatorios-btn').style.display = 'none';
-            statusArea.innerHTML = `<span id="user-display" style="color:#94a3b8; font-size: 14px;">Painel Restrito Fechado</span>`;
-            switchTab('cliente-portal');
-        }
-    });
-
-    // --- NAVEGAÇÃO DE ABAS ---
-    window.switchTab = function(tab) {
-        document.getElementById('section-cliente-portal').style.removeProperty('display');
-        document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
-        
-        if (tab === 'cliente-portal') {
-            document.getElementById('section-cliente-portal').style.display = 'contents';
-        } else {
-            document.getElementById('section-cliente-portal').style.display = 'none';
-            document.getElementById('section-' + tab).style.display = 'block';
-        }
-        
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${tab}-btn`).classList.add('active');
-    }
-
-    // --- CONVERSÃO E PREVIEW DO LOGO ---
-    window.previewLogoUpload = function(input) {
-        const file = input.files;
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                base64LogoData = e.target.result;
-                const imgEl = document.getElementById('logo-preview-element');
-                imgEl.src = base64LogoData; 
-                imgEl.style.display = 'inline-block';
-            };
-            reader.readAsDataURL(file);
+            alert('Credenciais corporativas incorretas! Use email: admin@grafica.com e senha: 123456');
         }
     }
 
-    // --- RECONSTRUÇÃO SEGURO CONTRA CACHE (MÉTODO DOM SEGURO) ---
-    onSnapshot(collection(db, "servicos"), (snap) => {
-        const select = document.getElementById('venda-servico');
-        const lista = document.getElementById('lista-servicos');
-        
-        select.innerHTML = '<option value="">-- Selecione o Produto Desejado --</option>';
-        lista.innerHTML = ""; 
-        cacheServicos = {};
-        
-        snap.forEach(d => {
-            const s = d.data(); 
-            cacheServicos[d.id] = s;
-            
+    function atualizarMenuSelecaoProdutos() {
+        const select = document.getElementById('cServico');
+        select.innerHTML = '';
+        bancoPrecos.forEach(prod => {
             const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
+            opt.value = prod.id;
+            opt.innerText = `${prod.nome} (${prod.tipo === 'm2' ? 'R$ ' + prod.preco.toFixed(2) + '/m²' : 'R$ ' + prod.preco.toFixed(2) + ' Fixo'})`;
             select.appendChild(opt);
-            
-            const tr = document.createElement('tr');
-            
-            const tdNome = document.createElement('td');
-            tdNome.style.fontWeight = 'bold';
-            tdNome.textContent = s.nome;
-            
-            const tdTipo = document.createElement('td');
-            const spanBadge = document.createElement('span');
-            spanBadge.className = 'badge';
-            spanBadge.textContent = s.tipo.toUpperCase();
-            tdTipo.appendChild(spanBadge);
-            
-            const tdPreco = document.createElement('td');
-            tdPreco.textContent = "R$ " + s.preco.toFixed(2);
-            
-            const tdAcoes = document.createElement('td');
-            const btnDel = document.createElement('button');
-            btnDel.className = 'btn-del';
-            btnDel.textContent = 'Excluir';
-            btnDel.onclick = function() { deletarBD('servicos', d.id); };
-            tdAcoes.appendChild(btnDel);
-            
-            tr.appendChild(tdNome);
-            tr.appendChild(tdTipo);
-            tr.appendChild(tdPreco);
-            tr.appendChild(tdAcoes);
-            
-            lista.appendChild(tr);
         });
-    });
+        verificarCamposDimensoes();
+    }
 
-    onSnapshot(collection(db, "vendas"), (snap) => {
-        const tbody = document.getElementById('lista-orcamentos');
-        tbody.innerHTML = "";
-        let totalFaturamento = 0, totalPedidos = 0;
-        let listaOrdenada = [];
+    function verificarCamposDimensoes() {
+        const select = document.getElementById('cServico');
+        const boxDimensoes = document.getElementById('boxDimensoes');
         
-        snap.forEach(d => { listaOrdenada.push({id: d.id, ...d.data()}); });
-        listaOrdenada.sort((a,b) => b.timestamp - a.timestamp);
-
-        listaOrdenada.forEach(item => {
-            totalFaturamento += item.total; 
-            totalPedidos++;
-            
-            const tr = document.createElement('tr');
-            
-            const tdData = document.createElement('td');
-            tdData.textContent = item.data;
-            
-            const tdCliente = document.createElement('td');
-            tdCliente.innerHTML = "<strong>" + item.cliente + "</strong><br><small>" + item.telefone + "</small>";
-            
-            const tdServico = document.createElement('td');
-            tdServico.textContent = item.servico;
-            
-            const tdMedidas = document.createElement('td');
-            tdMedidas.innerHTML = "<small>" + item.medidas + "</small>";
-            
-            const tdQtd = document.createElement('td');
-            tdQtd.textContent = item.qtd + "x";
-            
-            const tdLogo = document.createElement('td');
-            if(item.logo) {
-                const img = document.createElement('img');
-                img.className = 'preview-logo';
-                img.style.display = 'block';
-                img.src = item.logo;
-                tdLogo.appendChild(img);
-            } else {
-                tdLogo.innerHTML = '<span style="color:#94a3b8">Sem arquivo</span>';
-            }
-            
-            const tdTotal = document.createElement('td');
-            tdTotal.innerHTML = "<strong>R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + "</strong>";
-            
-            const tdAcoes = document.createElement('td');
-            const btnDel = document.createElement('button');
-            btnDel.className = 'btn-del';
-            btnDel.textContent = 'Remover';
-            btnDel.onclick = function() { deletarBD('vendas', item.id); };
-            tdAcoes.appendChild(btnDel);
-            
-            tr.appendChild(tdData);
-            tr.appendChild(tdCliente);
-            tr.appendChild(tdServico);
-            tr.appendChild(tdMedidas);
-            tr.appendChild(tdQtd);
-            tr.appendChild(tdLogo);
-            tr.appendChild(tdTotal);
-            tr.appendChild(tdAcoes);
-            
-            tbody.appendChild(tr);
-        });
-        document.getElementById('rep-faturamento').innerText = `R$ ${totalFaturamento.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-        document.getElementById('rep-pedidos').innerText = totalPedidos;
-        document.getElementById('rep-ticket').innerText = `R$ ${(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-    });
-
-    // --- OPERAÇÕES DE CADASTRO ---
-    window.cadastrarServico = async function() {
-        const nome = document.getElementById('s-nome').value;
-        const tipo = document.getElementById('s-tipo').value;
-        const preco = parseFloat(document.getElementById('s-preco').value);
-        if(!nome || isNaN(preco)) { alert("Preencha todos os campos do serviço."); return; }
-        await addDoc(collection(db, "servicos"), { nome, tipo, preco });
-        alert("Serviço adicionado ao catálogo público!");
-        document.getElementById('s-nome').value = ""; 
-        document.getElementById('s-preco').value = "";
-    }
-
-    window.deletarBD = async function(colecao, id) {
-        if(confirm("Deseja mesmo remover esse registro do sistema?")) {
-            await deleteDoc(doc(db, colecao, id));
-        }
-    }
-
-    // --- CÁLCULO DE ORÇAMENTOS ---
-    document.getElementById('venda-servico').addEventListener('change', function() {
-        const s = cacheServicos[this.value];
-        document.getElementById('dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
-    });
-
-    window.gerarOrcamento = function() {
-        const clienteNome = document.getElementById('venda-cliente').value;
-        const clienteTel = document.getElementById('venda-tel').value;
-        const servicoId = document.getElementById('venda-servico').value;
-        const quantidade = parseInt(document.getElementById('quantidade').value);
-
-        if(!clienteNome || !clienteTel || !servicoId) { alert("Por favor, preencha seus dados de contato e o serviço."); return; }
-
-        const servico = cacheServicos[servicoId];
-        let totalCusto = 0, dimensionStr = "";
-
-        if(servico.tipo === 'm2') {
-            const larg = parseFloat(document.getElementById('largura').value) || 1;
-            const alt = parseFloat(document.getElementById('altura').value) || 1;
-            totalCusto = (larg * alt) * servico.preco * quantidade;
-            dimensionStr = `${larg.toFixed(2)}m x ${alt.toFixed(2)}m (${(larg*alt).toFixed(2)}m²)`;
+        if(!select.value) return;
+        
+        const itemSelecionado = bancoPrecos.find(p => p.id == select.value);
+        if(itemSelecionado && itemSelecionado.tipo === 'fixo') {
+            boxDimensoes.style.display = 'none';
         } else {
-            totalCusto = servico.preco * quantidade;
-            dimensionStr = "Unidade Fixa";
+            boxDimensoes.style.display = 'grid';
+        }
+    }
+
+    function processarOrcamentoProvisorio() {
+        const nome = document.getElementById('cNome').value;
+        const whats = document.getElementById('cWhats').value;
+        const produtoId = document.getElementById('cServico').value;
+        const qtd = parseInt(document.getElementById('cQtd').value);
+
+        const produto = bancoPrecos.find(p => p.id == produtoId);
+        if(!produto) return;
+
+        let valorBaseCalculado = produto.preco;
+        let dimensoesTexto = "Unidade Fixa";
+
+        if(produto.tipo === 'm2') {
+            const largura = parseFloat(document.getElementById('cLargura').value);
+            const altura = parseFloat(document.getElementById('cAltura').value);
+            valorBaseCalculado = (largura * altura) * produto.preco;
+            dimensoesTexto = `${largura.toFixed(2)} x ${altura.toFixed(2)} m`;
         }
 
-        let totalAdicionais = 0;
-        ['acab_bastao','acab_ilhos','acab_instalacao'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el && el.checked) totalAdicionais += parseFloat(el.value);
-        });
+        let adicionaisSoma = 0;
+        if(document.getElementById('acab1').checked) adicionaisSoma += parseFloat(document.getElementById('acab1').value);
+        if(document.getElementById('acab2').checked) adicionaisSoma += parseFloat(document.getElementById('acab2').value);
+        if(document.getElementById('acab3').checked) adicionaisSoma += parseFloat(document.getElementById('acab3').value);
 
-        orcamentoAtual = {
-            data: new Date().toLocaleDateString('pt-BR'),
-            timestamp: Date.now(),
-            cliente: clienteNome,
-            telefone: clienteTel,
-            servico: servico.nome,
-            medidas: dimensionStr,
-            qtd: quantidade,
-            logo: base64LogoData,
-            total: totalCusto + totalAdicionais
+        const valorTotalFinal = (valorBaseCalculado * qtd) + adicionaisSoma;
+
+        pedidoRascunho = {
+            id: Date.now(),
+            data: new Date().toISOString(),
+            cliente: nome,
+            whatsapp: whats,
+            servico: produto.nome,
+            dimensoes: dimensoesTexto,
+            quantidade: qtd,
+            valor: valorTotalFinal,
+            status: "Pendente"
         };
 
-        let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
-
-        document.getElementById('recibo-conteudo').innerHTML = `
-            <div class="receipt-header"><h3>Orçamento Gerado</h3><p>Prévia para Aprovação</p></div>
-            <div class="receipt-row"><strong>Nome:</strong> <span>${orcamentoAtual.cliente}</span></div>
-            <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
-            <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
-            <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
-            ${visualLogo}
-            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+        document.getElementById('wrapperResumo').innerHTML = `
+            <div style="width:100%; color:#202124;">
+                <p><strong>Cliente:</strong> ${pedidoRascunho.cliente}</p>
+                <p><strong>Serviço:</strong> ${pedidoRascunho.servico}</p>
+                <p><strong>Configuração:</strong> ${pedidoRascunho.dimensoes} (Qtd: ${pedidoRascunho.quantidade})</p>
+                <p style="margin-top:10px; font-size:18px; color:var(--success); font-weight:bold;">
+                    Valor Estimado: R$ ${valorTotalFinal.toFixed(2)}
+                </p>
+            </div>
         `;
+        document.getElementById('boxAcaoEnvio').style.display = 'block';
     }
 
-    window.salvarOrcamentoBD = async function() {
-        if(!orcamentoAtual) { alert("Por favor, preencha o formulário e clique em 'Calcular Valor' antes de enviar."); return; }
-        await addDoc(collection(db, "vendas"), orcamentoAtual);
-        alert("Sucesso! Seu orçamento foi enviado. Nossa equipe entrará em contato pelo WhatsApp fornecido.");
-        document.getElementById('orcamentoForm').reset();
-        document.getElementById('logo-preview-element').style.display = 'none';
-        document.getElementById('recibo-conteudo').innerHTML = `<div style="text-align:center;padding-top:50px;color:#94a3b8;">Preencha os campos ao lado e clique em Calcular.</div>`;
-        orcamentoAtual = null; 
-        base64LogoData = "";
+    function enviarPedidoAdministracao() {
+        if(!pedidoRascunho) return;
+
+        bancoPedidos.push(pedidoRascunho);
+        localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
+        
+        alert('Orçamento enviado com sucesso! Aguarde o contato da empresa no WhatsApp.');
+        
+        pedidoRascunho = null;
+        document.getElementById('formOrcamento').reset();
+        document.getElementById('wrapperResumo').innerText = "Preencha os campos ao lado e clique em Calcular para visualizar os valores.";
+        document.getElementById('boxAcaoEnvio').style.display = 'none';
+        verificarCamposDimensoes();
+
+        renderizarTabelaPedidos();
+        recalcularMetricasGeraisCaixa();
+    }
+
+    function obterClasseVisualStatus(status) {
+        if(status === 'Aprovado') return 'status-aprovado';
+        if(status === 'Em Andamento') return 'status-andamento';
+        if(status === 'Entregue') return 'status-entregue';
+        return 'status-pendente';
+    }
+
+    function alternarOrdenacaoPedidosData() {
+        ordemDataCrescente = !ordemDataCrescente;
+        bancoPedidos.sort((a,b) => {
+            return ordemDataCrescente ? new Date(a.data) - new Date(b.data) : new Date(b.data) - new Date(a.data);
+        });
+        renderizarTabelaPedidos();
+    }
+
+    function atualizarMudarStatusPedido(idPedido, novoStatus, elementoSelect) {
+        elementoSelect.className = `status-select ${obterClasseVisualStatus(novoStatus)}`;
+        
+        const pedido = bancoPedidos.find(p => p.id == idPedido);
+        if(pedido) {
+            pedido.status = novoStatus;
+            localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
+            recalcularMetricasGeraisCaixa();
+        }
+    }
+
+    function deletarRegistroPedido(idPedido) {
+        if(confirm("Deseja deletar este pedido permanentemente do sistema?")) {
+            bancoPedidos = bancoPedidos.filter(p => p.id != idPedido);
+            localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
+            renderizarTabelaPedidos();
+            recalcularMetricasGeraisCaixa();
+        }
+    }
+
+    function renderizarTabelaPedidos(dadosExibicao = bancoPedidos) {
+        const corpo = document.getElementById('listaPedidosCorpo');
+        corpo.innerHTML = '';
+
+        if(dadosExibicao.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#999;">Nenhum registro encontrado.</td></tr>`;
+            return;
+        }
+
+        dadosExibicao.forEach(p => {
+            const tr = document.createElement('tr');
+            const dataObjeto = new Date(p.data);
+            const dataBr = dataObjeto.toLocaleDateString('pt-BR') + ' ' + dataObjeto.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const cls = obterClasseVisualStatus(p.status);
+
+            tr.innerHTML = `
+                <td><strong>${dataBr}</strong></td>
+                <td>${p.cliente}<br><small style="color:#666;">${p.whatsapp}</small></td>
+                <td>${p.servico}</td>
+                <td>${p.dimensoes}</td>
+                <td>${p.quantidade}</td>
+                <td><strong>R$ ${p.valor.toFixed(2)}</strong></td>
+                <td>
+                    <select class="status-select ${cls}" onchange="atualizarMudarStatusPedido(${p.id}, this.value, this)">
+                        <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Orçamento Pendente</option>
+                        <option value="Aprovado" ${p.status === 'Aprovado' ? 'selected' : ''}>Serviço Aprovado</option>
+                        <option value="Em Andamento" ${p.status === 'Em Andamento' ? 'selected' : ''}>Serviço em Andamento</option>
+                        <option value="Entregue" ${p.status === 'Entregue' ? 'selected' : ''}>Serviço Entregue</option>
+                    </select>
+                </td>
+                <td>
+                    <button onclick="deletarRegistroPedido(${p.id})" class="btn btn-danger">Excluir</button>
+                </td>
+            `;
+            corpo.appendChild(tr);
+        });
+    }
+
+    function configurarDatasPadraoRelatorios() {
+        const hojeStr = new Date().toISOString().split('T')[0];
+        document.getElementById('repDataInicio').value = hojeStr;
+        document.getElementById('repDataFim').value = hojeStr;
+    }
+
+    function gerarRelatorioFiltrado() {
+        const dInicioStr = document.getElementById('repDataInicio').value;
+        const dFimStr = document.getElementById('repDataFim').value;
+        const tipoFiltro = document.getElementById('repStatusFiltro').value;
+
+        if(!dInicioStr || !dFimStr) {
+            alert('Determine os períodos inicial e final para filtrar.');
+            return;
+        }
+
+        const dataLimiteInicio = new Date(dInicioStr + "T00:00:00");
+        const dataLimiteFim = new Date(dFimStr + "T23:59:59");
+
+        const filtrados = bancoPedidos.filter(p => {
+            const pData = new Date(p.data);
+            const dentroDoPeriodo = (pData >= dataLimiteInicio && pData <= dataLimiteFim);
+            
+            let condicaoStatus = true;
+            if (tipoFiltro === 'Aprovado_Andamento') {
+                condicaoStatus = (p.status === 'Aprovado' || p.status === 'Em Andamento');
+            } else if (tipoFiltro !== 'Todos') {
+                condicaoStatus = (p.status === tipoFiltro);
+            }
+
+            return dentroDoPeriodo && condicaoStatus;
+        });
+
+        const totalVolume = filtrados.length;
+        const totalFaturamento = filtrados.reduce((acc, obj) => acc + obj.valor, 0);
+
+        document.getElementById('repVolume').innerText = totalVolume;
+        document.getElementById('repFaturamento').innerText = totalFaturamento.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
+
+        renderizarTabelaPedidos(filtrados);
+    }
+
+    function adicionarNovoServicoPreco() {
+        const nome = document.getElementById('pNome').value;
+        const tipo = document.getElementById('pTipo').value;
+        const preco = parseFloat(document.getElementById('pPreco').value);
+
+        const novoItem = { id: Date.now(), nome, tipo, preco };
+        bancoPrecos.push(novoItem);
+        localStorage.setItem('gf_precos', JSON.stringify(bancoPrecos));
+
+        document.getElementById('pNome').value = '';
+        document.getElementById('pPreco').value = '';
+
+        renderizarTabelaPrecos();
+        atualizarMenuSelecaoProdutos();
+    }
+
+    function deletarItemPreco(idPreco) {
+        if(confirm("Deseja remover este item da tabela de preços pública?")) {
+            bancoPrecos = bancoPrecos.filter(p => p.id != idPreco);
+            localStorage.setItem('gf_precos', JSON.stringify(bancoPrecos));
+            renderizarTabelaPrecos();
+            atualizarMenuSelecaoProdutos();
+        }
+    }
+
+    function renderizarTabelaPrecos() {
+        const corpo = document.getElementById('listaPrecosCorpo');
+        corpo.innerHTML = '';
+
+        bancoPrecos.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p.nome}</td>
+                <td><small>${p.tipo === 'm2' ? 'Por Metro Quadrado (M²)' : 'Unidade Fixa'}</small></td>
+                <td><strong>R$ ${p.preco.toFixed(2)}</strong></td>
+                <td>
+                    <button onclick="deletarItemPreco(${p.id})" class="btn btn-danger" style="padding:4px 8px;">Remover</button>
+                </td>
+            `;
+            corpo.appendChild(tr);
+        });
+    }
+
+    function recalcularMetricasGeraisCaixa() {
+        const volumeGeral = bancoPedidos.length;
+        const faturamentoGeral = bancoPedidos.reduce((acc, p) => acc + p.valor, 0);
+        const ticketMedio = volumeGeral > 0 ? (faturamentoGeral / volumeGeral) : 0;
+
+        document.getElementById('geralVolume').innerText = volumeGeral;
+        document.getElementById('geralFaturamento').innerText = faturamentoGeral.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
+        document.getElementById('geralTicket').innerText = ticketMedio.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
     }
 </script>
 </body>
