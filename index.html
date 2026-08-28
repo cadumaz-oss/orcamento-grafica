@@ -50,12 +50,11 @@
 
         .actions { margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 10px; }
         .btn-print { background: var(--success); } .btn-print:hover { background: #059669; }
-        .btn-logout { background: var(--danger); width: auto; padding: 8px 15px; font-size: 14px;}
+        .btn-logout { background: var(--danger); color: white; width: auto; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; border: none; }
         .btn-del { background: var(--danger); padding: 5px 10px; font-size: 12px; border-radius: 4px; width: auto; color: white; cursor: pointer; border: none; }
 
         .panel-card { grid-column: 1 / -1; }
         .system-section { display: none; grid-column: 1 / -1; }
-        #section-cliente-portal { display: contents; } /* Livre por padrão */
         
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 15px; }
         th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -63,7 +62,7 @@
         .badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; grid-column: 1/-1; flex-wrap: wrap; background: #cbd5e1; padding: 8px; border-radius: 8px; }
-        .tab-btn { background: transparent; color: var(--text); width: auto; padding: 10px 20px; border-radius: 6px; font-weight: bold; }
+        .tab-btn { background: transparent; color: var(--text); width: auto; padding: 10px 20px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; }
         .tab-btn.active { background: var(--accent); color: white; }
 
         .preview-logo { max-width: 80px; max-height: 80px; object-fit: contain; border: 1px solid var(--border); border-radius: 4px; display: none; }
@@ -82,11 +81,11 @@
             <p>Portal Público & Sistema de Gestão Interna</p>
         </div>
         <div id="auth-status-area">
-            <span id="user-display" style="color:#94a3b8; font-size: 14px; margin-right: 10px;">Painel Restrito Fechado</span>
+            <span id="user-display" style="color:#94a3b8; font-size: 14px;">Painel Restrito Fechado</span>
         </div>
     </header>
 
-    <!-- NAVEGAÇÃO PRINCIPAL (Filtra o que o cliente vê e o que a gráfica vê) -->
+    <!-- NAVEGAÇÃO PRINCIPAL -->
     <div class="tabs">
         <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Área do Cliente (Acesso Livre)</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Painel da Empresa (Restrito)</button>
@@ -95,8 +94,8 @@
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
     </div>
 
-    <!-- 🌐 ABA 1: PORTAL DO CLIENTE (LIVRE) -->
-    <div id="section-cliente-portal" style="display: contents;">
+    <!-- 🌐 ABA 1: PORTAL DO CLIENTE -->
+    <div id="section-cliente-portal" class="system-section" style="display: contents;">
         <div class="card">
             <h2>📊 Faça Seu Orçamento na Hora</h2>
             <form id="orcamentoForm">
@@ -151,207 +150,360 @@
     <div id="section-login" class="system-section">
         <div class="card" style="max-width: 450px; margin: 40px auto;">
             <h2>🔐 Login de Funcionário / Admin</h2>
-import { initializeApp } from "gstatic.com";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "gstatic.com";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "gstatic.com";
+            <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
+            <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
+            <button onclick="login()">Entrar no Painel Administrativo</button>
+        </div>
+    </div>
 
-// ⚠️ ATENÇÃO: COLE AS SUAS CONFIGURAÇÕES DO FIREBASE INTEGRADAS AQUI
-const firebaseConfig = {
-   apiKey: "AIzaSyDB9WA3vYMW0IlwF0Fo8Aa9GhR0z6bAk6U",
-  authDomain: "portal-grafica-pro.firebaseapp.com",
-  projectId: "portal-grafica-pro",
-  storageBucket: "portal-grafica-pro.firebasestorage.app",
-  messagingSenderId: "410825484242",
-  appId: "1:410825484242:web:77114cb5a893cb20b94a0b"
-};
+    <!-- 📥 ABA 3: PEDIDOS RECEBIDOS -->
+    <div id="section-pedidos" class="system-section">
+        <div class="card panel-card">
+            <h2>📥 Orçamentos e Pedidos Enviados por Clientes</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-orcamentos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    <!-- 🛠️ ABA 4: CONFIGURAÇÃO DE SERVIÇOS -->
+    <div id="section-servicos" class="system-section">
+        <div class="card">
+            <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
+            <div class="row">
+                <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
+                <div class="form-group">
+                    <label>Tipo de Cálculo</label>
+                    <select id="s-tipo"><option value="m2">Por Metro Quadrado (M²)</option><option value="unidade">Por Unidade Fixa</option></select>
+                </div>
+            </div>
+            <div class="form-group"><label>Preço Base de Venda (R$)</label><input type="number" id="s-preco" step="0.01"></div>
+            <button onclick="cadastrarServico()">Salvar na Tabela de Preços</button>
+        </div>
+        <div class="card">
+            <h2>📋 Tabela de Preços Atual (Visível para os clientes)</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-servicos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-let cacheServicos = {};
-let orcamentoAtual = null;
-let base64LogoData = "";
+    <!-- 📈 ABA 5: RELATÓRIOS -->
+    <div id="section-relatorios" class="system-section">
+        <div class="card panel-card">
+            <h2>📈 Desempenho e Caixa da Gráfica</h2>
+            <div class="report-grid">
+                <div class="report-box"><h3>Faturamento Bruto (Pedidos Salvos)</h3><p id="rep-faturamento">R$ 0,00</p></div>
+                <div class="report-box"><h3>Volume Total de Demandas</h3><p id="rep-pedidos">0</p></div>
+                <div class="report-box"><h3>Ticket Médio Praticado</h3><p id="rep-ticket">R$ 0,00</p></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-// --- AUTENTICAÇÃO INTERNA ---
-window.login = function() {
-    signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value)
-        .then(() => { 
-            alert("Acesso autorizado!"); 
-            switchTab('pedidos'); 
-        })
-        .catch(e => alert("Acesso negado: dados incorretos."));
-}
+<!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-window.logoutProcess = function() { 
-    signOut(auth); 
-}
-
-onAuthStateChanged(auth, (user) => {
-    const loginBtn = document.getElementById('tab-login-btn');
-    const statusArea = document.getElementById('auth-status-area');
-    
-    if (user) {
-        loginBtn.style.display = 'none';
-        document.getElementById('tab-pedidos-btn').style.display = 'block';
-        document.getElementById('tab-servicos-btn').style.display = 'block';
-        document.getElementById('tab-relatorios-btn').style.display = 'block';
-        statusArea.innerHTML = `<span style="color:#10b981; font-weight:bold; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
-    } else {
-        loginBtn.style.display = 'block';
-        document.getElementById('tab-pedidos-btn').style.display = 'none';
-        document.getElementById('tab-servicos-btn').style.display = 'none';
-        document.getElementById('tab-relatorios-btn').style.display = 'none';
-        statusArea.innerHTML = `<span id="user-display" style="color:#94a3b8; font-size: 14px;">Painel Restrito Fechado</span>`;
-        switchTab('cliente-portal');
-    }
-});
-
-// --- NAVEGAÇÃO DE ABAS ---
-window.switchTab = function(tab) {
-    document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
-    document.getElementById('section-cliente-portal').style.display = tab === 'cliente-portal' ? 'contents' : 'none';
-    if(tab !== 'cliente-portal') document.getElementById('section-' + tab).style.display = 'block';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${tab}-btn`).classList.add('active');
-}
-
-// --- CONVERSÃO E PREVIEW DO LOGO ---
-window.previewLogoUpload = function(input) {
-    const file = input.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            base64LogoData = e.target.result;
-            const imgEl = document.getElementById('logo-preview-element');
-            imgEl.src = base64LogoData; 
-            imgEl.style.display = 'inline-block';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// --- SINCRONIZAÇÃO EM TEMPO REAL ---
-// Sincroniza a lista de serviços para o cliente ver imediatamente o que está ativo
-onSnapshot(collection(db, "servicos"), (snap) => {
-    const select = document.getElementById('venda-servico');
-    const lista = document.getElementById('lista-servicos');
-    select.innerHTML = '-- Selecione o Produto Desejado --';
-    lista.innerHTML = ""; 
-    cacheServicos = {};
-    
-    snap.forEach(d => {
-        const s = d.data(); 
-        cacheServicos[d.id] = s;
-        select.innerHTML += `<option value="${d.id}">${s.nome} (${s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa'})</option>`;
-        lista.innerHTML += `<tr><td><strong>${s.nome}</strong></td><td><span class="badge">${s.tipo.toUpperCase()}</span></td><td>R$ ${s.preco.toFixed(2)}</td><td><button class="btn-del" onclick="deletarBD('servicos','${d.id}')">Excluir</button></td></tr>`;
-    });
-});
-
-// Sincroniza os pedidos criados para o painel gerencial interno da gráfica
-onSnapshot(collection(db, "vendas"), (snap) => {
-    const tbody = document.getElementById('lista-orcamentos');
-    tbody.innerHTML = "";
-    let totalFaturamento = 0, totalPedidos = 0;
-    let listaOrdenada = [];
-    
-    snap.forEach(d => { 
-        listaOrdenada.push({id: d.id, ...d.data()}); 
-    });
-    
-    listaOrdenada.sort((a,b) => b.timestamp - a.timestamp);
-    listaOrdenada.forEach(item => {
-        totalFaturamento += item.total; 
-        totalPedidos++;
-        let logoHtml = item.logo ? `<img src="${item.logo}" class="preview-logo" style="display:block;">` : 'Sem arquivo';
-        tbody.innerHTML += `<tr><td>${item.data}</td><td><strong>${item.cliente}</strong><br><small>${item.telefone}</small></td><td>${item.servico}</td><td>${item.medidas}</td><td>${item.qtd}x</td><td>${logoHtml}</td><td>R$ ${item.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td><button class="btn-del" onclick="deletarBD('vendas','${item.id}')">Remover</button></td></tr>`;
-    });
-    
-    document.getElementById('rep-faturamento').innerText = `R$ ${totalFaturamento.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-    document.getElementById('rep-pedidos').innerText = totalPedidos;
-    document.getElementById('rep-ticket').innerText = `R$ ${(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-});
-
-// --- OPERAÇÕES DE CADASTRO ---
-window.cadastrarServico = async function() {
-    const nome = document.getElementById('s-nome').value;
-    const tipo = document.getElementById('s-tipo').value;
-    const preco = parseFloat(document.getElementById('s-preco').value);
-    
-    if(!nome || isNaN(preco)) return alert("Preencha todos os campos do serviço.");
-    
-    await addDoc(collection(db, "servicos"), { nome, tipo, preco });
-    alert("Serviço adicionado ao catálogo público!");
-    document.getElementById('s-nome').value = ""; 
-    document.getElementById('s-preco').value = "";
-}
-
-window.deletarBD = async function(colecao, id) {
-    if(confirm("Deseja mesmo remover esse registro do sistema?")) {
-        await deleteDoc(doc(db, colecao, id));
-    }
-}
-
-// --- CÁLCULO DE ORÇAMENTOS ---
-document.getElementById('venda-servico').addEventListener('change', function() {
-    const s = cacheServicos[this.value];
-    document.getElementById('dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
-});
-
-window.gerarOrcamento = function() {
-    const clienteNome = document.getElementById('venda-cliente').value;
-    const clienteTel = document.getElementById('venda-tel').value;
-    const servicoId = document.getElementById('venda-servico').value;
-    const quantidade = parseInt(document.getElementById('quantidade').value);
-    
-    if(!clienteNome || !clienteTel || !servicoId) {
-        return alert("Por favor, preencha seus dados de contato e o serviço.");
-    }
-    
-    const servico = cacheServicos[servicoId];
-    let totalCusto = 0, dimensionStr = "";
-    
-    if(servico.tipo === 'm2') {
-        const larg = parseFloat(document.getElementById('largura').value) || 1;
-        const alt = parseFloat(document.getElementById('altura').value) || 1;
-        totalCusto = (larg * alt) * servico.preco * quantidade;
-        dimensionStr = `${larg.toFixed(2)}m x ${alt.toFixed(2)}m (${(larg*alt).toFixed(2)}m²)`;
-    } else {
-        totalCusto = servico.preco * quantidade;
-        dimensionStr = "Unidade Fixa";
-    }
-    
-    let totalAdicionais = 0;
-    ['acab_bastao','acab_ilhos','acab_instalacao'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el && el.checked) totalAdicionais += parseFloat(el.value);
-    });
-    
-    orcamentoAtual = {
-        data: new Date().toLocaleDateString('pt-BR'),
-        timestamp: Date.now(),
-        cliente: clienteNome,
-        telefone: clienteTel,
-        servico: servico.nome,
-        medidas: dimensionStr,
-        qtd: quantidade,
-        logo: base64LogoData,
-        total: totalCusto + totalAdicionais
+    // CONFIGURAÇÕES DO FIREBASE CONECTADAS
+    const firebaseConfig = {
+        apiKey: "AIzaSyDB9WA3vYMW0IlwF0Fo8Aa9GhR0z6bAk6U",
+        authDomain: "portal-grafica-pro.firebaseapp.com",
+        projectId: "portal-grafica-pro",
+        storageBucket: "portal-grafica-pro.firebasestorage.app",
+        messagingSenderId: "410825484242",
+        appId: "1:410825484242:web:77114cb5a893cb20b94a0b"
     };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let cacheServicos = {};
+    let orcamentoAtual = null;
+    let base64LogoData = ""; 
+
+    // --- AUTENTICAÇÃO INTERNA ---
+    window.login = function() {
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
+        if(!email || !senha) { alert("Preencha o e-mail e senha."); return; }
+        
+        signInWithEmailAndPassword(auth, email, senha)
+            .then(() => { 
+                alert("Acesso autorizado!"); 
+                switchTab('pedidos'); 
+            })
+            .catch(e => alert("Acesso negado: dados incorretos ou erro de conexão."));
+    }
     
-    let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
-    
-    document.getElementById('recibo-conteudo').innerHTML = `
-        <div class="receipt-header">
-            <h3>Orçamento Gerado</h3>
-            <p>Prévia para Aprovação</p>
-        </div> 
-        <div class="receipt-row">
-            <strong>Nome:</strong> <span>${orcamentoAtual.cliente}</span>
-        </div>
-        <div class="receipt-row">
-            <strong>Serviço:</strong> <span>${orcamentoAtual.servico}</span>
-        </div>
-        ${visualLogo}
-    `;
-};
+    window.logoutProcess = function() { 
+        signOut(auth).then(() => {
+            alert("Sessão encerrada!");
+        }); 
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        const loginBtn = document.getElementById('tab-login-btn');
+        const statusArea = document.getElementById('auth-status-area');
+        
+        if (user) {
+            loginBtn.style.display = 'none';
+            document.getElementById('tab-pedidos-btn').style.display = 'block';
+            document.getElementById('tab-servicos-btn').style.display = 'block';
+            document.getElementById('tab-relatorios-btn').style.display = 'block';
+            statusArea.innerHTML = `<span style="color:#10b981; font-weight:bold; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
+        } else {
+            loginBtn.style.display = 'block';
+            document.getElementById('tab-pedidos-btn').style.display = 'none';
+            document.getElementById('tab-servicos-btn').style.display = 'none';
+            document.getElementById('tab-relatorios-btn').style.display = 'none';
+            statusArea.innerHTML = `<span id="user-display" style="color:#94a3b8; font-size: 14px;">Painel Restrito Fechado</span>`;
+            switchTab('cliente-portal');
+        }
+    });
+
+    // --- NAVEGAÇÃO DE ABAS ---
+    window.switchTab = function(tab) {
+        document.getElementById('section-cliente-portal').style.removeProperty('display');
+        document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
+        
+        if (tab === 'cliente-portal') {
+            document.getElementById('section-cliente-portal').style.display = 'contents';
+        } else {
+            document.getElementById('section-cliente-portal').style.display = 'none';
+            document.getElementById('section-' + tab).style.display = 'block';
+        }
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${tab}-btn`).classList.add('active');
+    }
+
+    // --- CONVERSÃO E PREVIEW DO LOGO ---
+    window.previewLogoUpload = function(input) {
+        const file = input.files;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64LogoData = e.target.result;
+                const imgEl = document.getElementById('logo-preview-element');
+                imgEl.src = base64LogoData; 
+                imgEl.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // --- RECONSTRUÇÃO SEGURO CONTRA CACHE (MÉTODO DOM SEGURO) ---
+    onSnapshot(collection(db, "servicos"), (snap) => {
+        const select = document.getElementById('venda-servico');
+        const lista = document.getElementById('lista-servicos');
+        
+        select.innerHTML = '<option value="">-- Selecione o Produto Desejado --</option>';
+        lista.innerHTML = ""; 
+        cacheServicos = {};
+        
+        snap.forEach(d => {
+            const s = d.data(); 
+            cacheServicos[d.id] = s;
+            
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
+            select.appendChild(opt);
+            
+            const tr = document.createElement('tr');
+            
+            const tdNome = document.createElement('td');
+            tdNome.style.fontWeight = 'bold';
+            tdNome.textContent = s.nome;
+            
+            const tdTipo = document.createElement('td');
+            const spanBadge = document.createElement('span');
+            spanBadge.className = 'badge';
+            spanBadge.textContent = s.tipo.toUpperCase();
+            tdTipo.appendChild(spanBadge);
+            
+            const tdPreco = document.createElement('td');
+            tdPreco.textContent = "R$ " + s.preco.toFixed(2);
+            
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Excluir';
+            btnDel.onclick = function() { deletarBD('servicos', d.id); };
+            tdAcoes.appendChild(btnDel);
+            
+            tr.appendChild(tdNome);
+            tr.appendChild(tdTipo);
+            tr.appendChild(tdPreco);
+            tr.appendChild(tdAcoes);
+            
+            lista.appendChild(tr);
+        });
+    });
+
+    onSnapshot(collection(db, "vendas"), (snap) => {
+        const tbody = document.getElementById('lista-orcamentos');
+        tbody.innerHTML = "";
+        let totalFaturamento = 0, totalPedidos = 0;
+        let listaOrdenada = [];
+        
+        snap.forEach(d => { listaOrdenada.push({id: d.id, ...d.data()}); });
+        listaOrdenada.sort((a,b) => b.timestamp - a.timestamp);
+
+        listaOrdenada.forEach(item => {
+            totalFaturamento += item.total; 
+            totalPedidos++;
+            
+            const tr = document.createElement('tr');
+            
+            const tdData = document.createElement('td');
+            tdData.textContent = item.data;
+            
+            const tdCliente = document.createElement('td');
+            tdCliente.innerHTML = "<strong>" + item.cliente + "</strong><br><small>" + item.telefone + "</small>";
+            
+            const tdServico = document.createElement('td');
+            tdServico.textContent = item.servico;
+            
+            const tdMedidas = document.createElement('td');
+            tdMedidas.innerHTML = "<small>" + item.medidas + "</small>";
+            
+            const tdQtd = document.createElement('td');
+            tdQtd.textContent = item.qtd + "x";
+            
+            const tdLogo = document.createElement('td');
+            if(item.logo) {
+                const img = document.createElement('img');
+                img.className = 'preview-logo';
+                img.style.display = 'block';
+                img.src = item.logo;
+                tdLogo.appendChild(img);
+            } else {
+                tdLogo.innerHTML = '<span style="color:#94a3b8">Sem arquivo</span>';
+            }
+            
+            const tdTotal = document.createElement('td');
+            tdTotal.innerHTML = "<strong>R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + "</strong>";
+            
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Remover';
+            btnDel.onclick = function() { deletarBD('vendas', item.id); };
+            tdAcoes.appendChild(btnDel);
+            
+            tr.appendChild(tdData);
+            tr.appendChild(tdCliente);
+            tr.appendChild(tdServico);
+            tr.appendChild(tdMedidas);
+            tr.appendChild(tdQtd);
+            tr.appendChild(tdLogo);
+            tr.appendChild(tdTotal);
+            tr.appendChild(tdAcoes);
+            
+            tbody.appendChild(tr);
+        });
+        document.getElementById('rep-faturamento').innerText = `R$ ${totalFaturamento.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        document.getElementById('rep-pedidos').innerText = totalPedidos;
+        document.getElementById('rep-ticket').innerText = `R$ ${(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    });
+
+    // --- OPERAÇÕES DE CADASTRO ---
+    window.cadastrarServico = async function() {
+        const nome = document.getElementById('s-nome').value;
+        const tipo = document.getElementById('s-tipo').value;
+        const preco = parseFloat(document.getElementById('s-preco').value);
+        if(!nome || isNaN(preco)) { alert("Preencha todos os campos do serviço."); return; }
+        await addDoc(collection(db, "servicos"), { nome, tipo, preco });
+        alert("Serviço adicionado ao catálogo público!");
+        document.getElementById('s-nome').value = ""; 
+        document.getElementById('s-preco').value = "";
+    }
+
+    window.deletarBD = async function(colecao, id) {
+        if(confirm("Deseja mesmo remover esse registro do sistema?")) {
+            await deleteDoc(doc(db, colecao, id));
+        }
+    }
+
+    // --- CÁLCULO DE ORÇAMENTOS ---
+    document.getElementById('venda-servico').addEventListener('change', function() {
+        const s = cacheServicos[this.value];
+        document.getElementById('dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
+    });
+
+    window.gerarOrcamento = function() {
+        const clienteNome = document.getElementById('venda-cliente').value;
+        const clienteTel = document.getElementById('venda-tel').value;
+        const servicoId = document.getElementById('venda-servico').value;
+        const quantidade = parseInt(document.getElementById('quantidade').value);
+
+        if(!clienteNome || !clienteTel || !servicoId) { alert("Por favor, preencha seus dados de contato e o serviço."); return; }
+
+        const servico = cacheServicos[servicoId];
+        let totalCusto = 0, dimensionStr = "";
+
+        if(servico.tipo === 'm2') {
+            const larg = parseFloat(document.getElementById('largura').value) || 1;
+            const alt = parseFloat(document.getElementById('altura').value) || 1;
+            totalCusto = (larg * alt) * servico.preco * quantidade;
+            dimensionStr = `${larg.toFixed(2)}m x ${alt.toFixed(2)}m (${(larg*alt).toFixed(2)}m²)`;
+        } else {
+            totalCusto = servico.preco * quantidade;
+            dimensionStr = "Unidade Fixa";
+        }
+
+        let totalAdicionais = 0;
+        ['acab_bastao','acab_ilhos','acab_instalacao'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el && el.checked) totalAdicionais += parseFloat(el.value);
+        });
+
+        orcamentoAtual = {
+            data: new Date().toLocaleDateString('pt-BR'),
+            timestamp: Date.now(),
+            cliente: clienteNome,
+            telefone: clienteTel,
+            servico: servico.nome,
+            medidas: dimensionStr,
+            qtd: quantidade,
+            logo: base64LogoData,
+            total: totalCusto + totalAdicionais
+        };
+
+        let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
+
+        document.getElementById('recibo-conteudo').innerHTML = `
+            <div class="receipt-header"><h3>Orçamento Gerado</h3><p>Prévia para Aprovação</p></div>
+            <div class="receipt-row"><strong>Nome:</strong> <span>${orcamentoAtual.cliente}</span></div>
+            <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
+            <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
+            <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
+            ${visualLogo}
+            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+        `;
+    }
+
+    window.salvarOrcamentoBD = async function() {
+        if(!orcamentoAtual) { alert("Por favor, preencha o formulário e clique em 'Calcular Valor' antes de enviar."); return; }
+        await addDoc(collection(db, "vendas"), orcamentoAtual);
+        alert("Sucesso! Seu orçamento foi enviado. Nossa equipe entrará em contato pelo WhatsApp fornecido.");
+        document.getElementById('orcamentoForm').reset();
+        document.getElementById('logo-preview-element').style.display = 'none';
+        document.getElementById('recibo-conteudo').innerHTML = `<div style="text-align:center;padding-top:50px;color:#94a3b8;">Preencha os campos ao lado e clique em Calcular.</div>`;
+        orcamentoAtual = null; 
+        base64LogoData = "";
+    }
+</script>
+</body>
+</html>
