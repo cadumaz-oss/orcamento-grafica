@@ -54,11 +54,12 @@
         }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--primary); letter-spacing: 0.3px; }
-        input, select {
+        input, select, textarea {
             width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 9px;
             font-size: 15px; background: #fdfcf9; color: var(--text); transition: border-color 0.18s, box-shadow 0.18s;
         }
-        input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12); background: #fff; }
+        textarea { resize: vertical; min-height: 54px; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12); background: #fff; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
         .checkbox-group { background: #faf8f2; padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
@@ -307,6 +308,11 @@
 
             <h2 style="font-size:16px; margin-top:10px;">🛒 Adicionar Item à Venda</h2>
             <div class="form-group">
+                <label>⚡ Código do Serviço (lançamento rápido)</label>
+                <input type="text" id="pdv-codigo" placeholder="Digite o código e pressione Enter" autocomplete="off">
+                <p class="count-note" id="pdv-codigo-feedback" style="margin-top:6px;">Digite o código do serviço e pressione <strong>Enter</strong> para selecioná-lo automaticamente — ou escolha na lista abaixo.</p>
+            </div>
+            <div class="form-group">
                 <label>Serviço Vendido (inclui serviços internos)</label>
                 <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
             </div>
@@ -353,6 +359,11 @@
                     <option value="andamento">⏳ Em produção (Em Andamento)</option>
                     <option value="recebido">📥 Recebido (a produzir)</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>📝 Observação (opcional)</label>
+                <textarea id="pdv-observacao" rows="2" placeholder="Ex: entregar após as 14h, arte aprovada pelo cliente, retirar no balcão..."></textarea>
+                <p class="count-note" style="margin-top:6px;">Anotações internas da venda: aparecem no resumo, no comprovante e na tela de Pedidos Recebidos.</p>
             </div>
         </div>
 
@@ -470,6 +481,11 @@
                     <select id="s-tipo"><option value="m2">Por Metro Quadrado (M²)</option><option value="unidade">Por Unidade Fixa</option></select>
                 </div>
             </div>
+            <div class="form-group">
+                <label>Código do Serviço (para lançamento rápido no PDV — Ex: 101)</label>
+                <input type="text" id="s-codigo" placeholder="Deixe vazio para gerar automaticamente" inputmode="numeric">
+                <p class="count-note" style="margin-top:6px;">Use números ou letras curtas (Ex: 101, BAN, ADES). No PDV, basta digitar o código e pressionar Enter para selecionar o serviço.</p>
+            </div>
             <div class="form-group"><label>Preço Base de Venda (R$)</label><input type="number" id="s-preco" step="0.01"></div>
             <div class="form-group">
                 <label class="checkbox-item" style="background:#faf8f2; padding:12px; border-radius:10px; border:1px solid var(--border);">
@@ -483,7 +499,7 @@
             <h2>📋 Tabela de Preços Atual (públicos e internos)</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Visibilidade</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Código</th><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Visibilidade</th><th>Ações</th></tr></thead>
                     <tbody id="lista-servicos"></tbody>
                 </table>
             </div>
@@ -904,6 +920,9 @@
             const s = d.data();
             cacheServicos[d.id] = s;
 
+            // Rótulo com o código do serviço (quando existir) para facilitar a identificação
+            const rotuloCodigo = s.codigo ? '[' + s.codigo + '] ' : '';
+
             // Serviços marcados como internos NÃO aparecem no portal do cliente
             if (!s.interno) {
                 const opt = document.createElement('option');
@@ -912,19 +931,26 @@
                 select.appendChild(opt);
             }
 
-            // No PDV aparecem TODOS os serviços (públicos e internos)
+            // No PDV aparecem TODOS os serviços (públicos e internos), com o código à frente
             const optPDV = document.createElement('option');
             optPDV.value = d.id;
-            optPDV.textContent = (s.interno ? '🔒 ' : '') + s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
+            optPDV.textContent = (s.interno ? '🔒 ' : '') + rotuloCodigo + s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
             selectPDV.appendChild(optPDV);
 
             // No cadastro de acabamentos: todos os serviços disponíveis para vínculo
             const optAcab = document.createElement('option');
             optAcab.value = d.id;
-            optAcab.textContent = (s.interno ? '🔒 ' : '') + s.nome;
+            optAcab.textContent = (s.interno ? '🔒 ' : '') + rotuloCodigo + s.nome;
             selectAcab.appendChild(optAcab);
 
             const tr = document.createElement('tr');
+
+            const tdCodigo = document.createElement('td');
+            const badgeCod = document.createElement('span');
+            badgeCod.className = 'badge';
+            badgeCod.textContent = s.codigo || '—';
+            if (s.codigo) { badgeCod.style.background = '#fbf0d9'; badgeCod.style.color = 'var(--warning)'; }
+            tdCodigo.appendChild(badgeCod);
 
             const tdNome = document.createElement('td');
             tdNome.style.fontWeight = 'bold';
@@ -954,12 +980,22 @@
             tdVis.appendChild(badgeVis);
 
             const tdAcoes = document.createElement('td');
+            const btnCod = document.createElement('button');
+            btnCod.className = 'btn-del';
+            btnCod.style.color = 'var(--accent)';
+            btnCod.style.borderColor = '#e5d9b8';
+            btnCod.style.marginRight = '6px';
+            btnCod.textContent = 'Código';
+            btnCod.title = 'Definir ou alterar o código deste serviço';
+            btnCod.onclick = function() { editarCodigoServico(d.id); };
+            tdAcoes.appendChild(btnCod);
             const btnDel = document.createElement('button');
             btnDel.className = 'btn-del';
             btnDel.textContent = 'Excluir';
             btnDel.onclick = function() { deletarBD('servicos', d.id); };
             tdAcoes.appendChild(btnDel);
 
+            tr.appendChild(tdCodigo);
             tr.appendChild(tdNome);
             tr.appendChild(tdTipo);
             tr.appendChild(tdPreco);
@@ -1085,12 +1121,68 @@
         renderizarAcabamentosServico(this.value, document.getElementById('pdv-acabamentos-container'), 'acabamento-check-pdv');
     });
 
+    // ===== LANÇAMENTO POR CÓDIGO NO PDV =====
+    // Localiza um serviço pelo código cadastrado (comparação sem diferenciar maiúsculas/minúsculas)
+    function buscarServicoPorCodigo(codigoDigitado) {
+        const alvo = String(codigoDigitado || '').trim().toUpperCase();
+        if (!alvo) return null;
+        const entrada = Object.entries(cacheServicos).find(([id, s]) => String(s.codigo || '').toUpperCase() === alvo);
+        return entrada ? { id: entrada[0], servico: entrada[1] } : null;
+    }
+
+    // Seleciona o serviço no PDV a partir do código digitado, disparando as mesmas ações da escolha manual
+    function selecionarServicoPDVPorCodigo() {
+        const campoCodigo = document.getElementById('pdv-codigo');
+        const feedback = document.getElementById('pdv-codigo-feedback');
+        const encontrado = buscarServicoPorCodigo(campoCodigo.value);
+
+        if (!campoCodigo.value.trim()) {
+            feedback.style.color = '';
+            feedback.innerHTML = 'Digite o código do serviço e pressione <strong>Enter</strong> para selecioná-lo automaticamente — ou escolha na lista abaixo.';
+            return;
+        }
+
+        if (!encontrado) {
+            feedback.style.color = 'var(--danger)';
+            feedback.textContent = 'Código "' + campoCodigo.value.trim() + '" não encontrado. Confira o código na tabela de preços.';
+            campoCodigo.focus();
+            campoCodigo.select();
+            return;
+        }
+
+        const selectPDV = document.getElementById('pdv-servico');
+        selectPDV.value = encontrado.id;
+        selectPDV.dispatchEvent(new Event('change'));
+
+        feedback.style.color = 'var(--success)';
+        feedback.innerHTML = '✅ Serviço <strong>' + encontrado.servico.nome + '</strong> selecionado pelo código <strong>' + String(encontrado.servico.codigo).toUpperCase() + '</strong>.';
+
+        // Leva o atendente direto ao próximo campo do item
+        const proximo = encontrado.servico.tipo === 'unidade'
+            ? document.getElementById('pdv-quantidade')
+            : document.getElementById('pdv-largura');
+        if (proximo) { proximo.focus(); proximo.select && proximo.select(); }
+    }
+
+    const campoCodigoPDV = document.getElementById('pdv-codigo');
+    campoCodigoPDV.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            selecionarServicoPDVPorCodigo();
+        }
+    });
+    // Ao sair do campo com um código preenchido, tenta selecionar automaticamente
+    campoCodigoPDV.addEventListener('blur', function() {
+        if (this.value.trim()) selecionarServicoPDVPorCodigo();
+    });
+
     // Mostra o campo de valor do sinal apenas quando a forma de pagamento é "parcial"
     document.getElementById('pdv-pagamento-tipo').addEventListener('change', function() {
         document.getElementById('pdv-sinal-group').style.display = this.value === 'parcial' ? 'block' : 'none';
         atualizarResumoPDV();
     });
     document.getElementById('pdv-valor-sinal').addEventListener('input', atualizarResumoPDV);
+    document.getElementById('pdv-observacao').addEventListener('input', atualizarResumoPDV);
 
     function totalCarrinhoPDV() {
         return carrinhoPDV.reduce((soma, it) => soma + it.total, 0);
@@ -1126,6 +1218,7 @@
 
         carrinhoPDV.push({
             servico: servico.nome,
+            codigoServico: servico.codigo || '',
             medidas: dimensionStr,
             qtd: quantidade,
             acabamentos: acabamentosSelecionados,
@@ -1134,6 +1227,7 @@
         });
 
         // Limpa os campos do item para facilitar a inclusão do próximo
+        document.getElementById('pdv-codigo').value = '';
         document.getElementById('pdv-servico').value = '';
         document.getElementById('pdv-quantidade').value = 1;
         document.getElementById('pdv-largura').value = 1.00;
@@ -1142,6 +1236,9 @@
         document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
 
         renderizarCarrinhoPDV();
+
+        // Devolve o cursor ao campo de código para lançar o próximo item imediatamente
+        document.getElementById('pdv-codigo').focus();
     }
 
     window.removerItemPDV = function(indice) {
@@ -1171,7 +1268,7 @@
                 const acabTxt = it.acabamentos.length
                     ? ' · Acabamentos: ' + it.acabamentos.map(a => a.nome).join(', ')
                     : '';
-                info.innerHTML = `<strong>${idx + 1}. ${it.servico}</strong><small>${it.medidas} · Qtd: ${it.qtd}x${acabTxt}</small>`;
+                info.innerHTML = `<strong>${idx + 1}. ${it.codigoServico ? '[' + it.codigoServico + '] ' : ''}${it.servico}</strong><small>${it.medidas} · Qtd: ${it.qtd}x${acabTxt}</small>`;
 
                 const total = document.createElement('span');
                 total.className = 'ci-total';
@@ -1208,11 +1305,12 @@
         const cliente = document.getElementById('pdv-cliente').value.trim() || 'Cliente Balcão';
         const telefone = document.getElementById('pdv-tel').value.trim() || '—';
         const statusEscolhido = document.getElementById('pdv-status').value;
+        const observacao = document.getElementById('pdv-observacao').value.trim();
 
         const itensHtml = carrinhoPDV.map((it, idx) => `
             <div class="receipt-row" style="align-items:flex-start;">
                 <strong style="min-width:26px;">${idx + 1}.</strong>
-                <span style="flex:1;">${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
+                <span style="flex:1;">${it.codigoServico ? '[' + it.codigoServico + '] ' : ''}${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
                 <span style="white-space:nowrap;">R$ ${fmtMoeda(it.total)}</span>
             </div>
         `).join('');
@@ -1238,6 +1336,7 @@
             ${itensHtml}
             ${pagamentoHtml}
             <div class="receipt-row"><strong>Situação:</strong> <span>${STATUS_ROTULO[statusEscolhido]}</span></div>
+            ${observacao ? `<div class="receipt-row" style="align-items:flex-start;"><strong>📝 Observação:</strong> <span style="text-align:right; white-space:pre-wrap;">${observacao}</span></div>` : ''}
             <div class="total-box"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(total)}</span></div>
         `;
     }
@@ -1292,7 +1391,8 @@
                 : [],
             origem: 'pdv',
             status: statusEscolhido,
-            historicoStatus: historico
+            historicoStatus: historico,
+            observacao: document.getElementById('pdv-observacao').value.trim()
         };
 
         try {
@@ -1316,14 +1416,19 @@
         carrinhoPDV = [];
         document.getElementById('pdv-cliente').value = '';
         document.getElementById('pdv-tel').value = '';
+        document.getElementById('pdv-codigo').value = '';
         document.getElementById('pdv-servico').value = '';
         document.getElementById('pdv-quantidade').value = 1;
         document.getElementById('pdv-status').value = 'finalizado';
         document.getElementById('pdv-pagamento-tipo').value = 'total';
         document.getElementById('pdv-valor-sinal').value = '';
         document.getElementById('pdv-sinal-group').style.display = 'none';
+        document.getElementById('pdv-observacao').value = '';
         document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
         renderizarCarrinhoPDV();
+
+        // Deixa o cursor no campo de código, pronto para iniciar a próxima venda
+        document.getElementById('pdv-codigo').focus();
     }
 
     // ===== COMPROVANTE DA VENDA PDV (impressão / salvar em PDF) =====
@@ -1335,7 +1440,7 @@
         const itensHtml = (venda.itens || []).map((it, idx) => `
             <div class="comp-row" style="align-items:flex-start;">
                 <strong style="min-width:26px;">${idx + 1}.</strong>
-                <span style="flex:1;">${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos && it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
+                <span style="flex:1;">${it.codigoServico ? '[' + it.codigoServico + '] ' : ''}${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos && it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
                 <span style="white-space:nowrap;">R$ ${fmtMoeda(it.total)}</span>
             </div>
         `).join('');
@@ -1366,6 +1471,7 @@
                 <div class="comp-row"><strong>Itens:</strong> <span>${(venda.itens || []).length}</span></div>
                 ${itensHtml}
                 ${pagamentoHtml}
+                ${venda.observacao ? `<div class="comp-row" style="align-items:flex-start;"><strong>📝 Observação:</strong> <span style="text-align:right; white-space:pre-wrap;">${venda.observacao}</span></div>` : ''}
                 <div class="comp-total"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(venda.total)}</span></div>
                 <div class="comp-foot">
                     Este comprovante confirma o registro da venda no balcão.<br>
@@ -1595,6 +1701,12 @@
             } else {
                 tdServico.textContent = item.servico;
             }
+            if (item.observacao) {
+                const divObs = document.createElement('div');
+                divObs.style.cssText = 'margin-top:8px; padding:8px 10px; background:#fdf8e7; border-left:3px solid var(--accent-soft); border-radius:0 8px 8px 0; font-size:12.5px; white-space:pre-wrap;';
+                divObs.innerHTML = '<strong>📝 Obs:</strong> ' + item.observacao;
+                tdServico.appendChild(divObs);
+            }
 
             const tdMedidas = document.createElement('td');
             tdMedidas.innerHTML = "<small>" + (item.medidas || '—') + "</small>";
@@ -1813,18 +1925,60 @@
         renderizarRelatorio();
     });
 
-    // --- OPERAÇÕES DE CADASTRO (inalteradas) ---
+    // --- OPERAÇÕES DE CADASTRO ---
+    // Gera um código numérico livre (a partir de 101) para serviços cadastrados sem código informado
+    function gerarCodigoServicoLivre() {
+        const usados = new Set(Object.values(cacheServicos).map(s => String(s.codigo || '').toUpperCase()));
+        let candidato = 101;
+        while (usados.has(String(candidato))) candidato++;
+        return String(candidato);
+    }
+
     window.cadastrarServico = async function() {
         const nome = document.getElementById('s-nome').value;
         const tipo = document.getElementById('s-tipo').value;
         const preco = parseFloat(document.getElementById('s-preco').value);
         const interno = document.getElementById('s-interno').checked;
+        let codigo = document.getElementById('s-codigo').value.trim().toUpperCase();
         if(!nome || isNaN(preco)) { alert("Preencha todos os campos do serviço."); return; }
-        await addDoc(collection(db, "servicos"), { nome, tipo, preco, interno });
-        alert(interno ? "Serviço interno cadastrado! Disponível apenas no PDV." : "Serviço adicionado ao catálogo público!");
+
+        // Se nenhum código foi informado, gera um automaticamente
+        if (!codigo) codigo = gerarCodigoServicoLivre();
+
+        // Impede códigos duplicados entre serviços
+        const duplicado = Object.values(cacheServicos).some(s => String(s.codigo || '').toUpperCase() === codigo);
+        if (duplicado) { alert('Já existe um serviço cadastrado com o código "' + codigo + '". Escolha outro código.'); document.getElementById('s-codigo').focus(); return; }
+
+        await addDoc(collection(db, "servicos"), { nome, tipo, preco, interno, codigo });
+        alert((interno ? "Serviço interno cadastrado! Disponível apenas no PDV." : "Serviço adicionado ao catálogo público!") + " Código: " + codigo);
         document.getElementById('s-nome').value = "";
+        document.getElementById('s-codigo').value = "";
         document.getElementById('s-preco').value = "";
         document.getElementById('s-interno').checked = false;
+    }
+
+    // Define ou altera o código de um serviço já cadastrado (usado no botão "Código" da tabela de preços)
+    window.editarCodigoServico = async function(id) {
+        const servico = cacheServicos[id];
+        if (!servico) return;
+
+        const sugestao = servico.codigo || gerarCodigoServicoLivre();
+        const entrada = prompt('Código do serviço "' + servico.nome + '":\n(deixe vazio para usar o código automático ' + sugestao + ')', sugestao);
+        if (entrada === null) return; // usuário cancelou
+
+        let novoCodigo = entrada.trim().toUpperCase();
+        if (!novoCodigo) novoCodigo = sugestao;
+
+        // Impede códigos duplicados em outros serviços
+        const duplicado = Object.entries(cacheServicos).some(([outroId, s]) => outroId !== id && String(s.codigo || '').toUpperCase() === novoCodigo);
+        if (duplicado) { alert('Já existe outro serviço com o código "' + novoCodigo + '". Escolha um código diferente.'); return; }
+
+        try {
+            await updateDoc(doc(db, "servicos", id), { codigo: novoCodigo });
+            alert('Código do serviço "' + servico.nome + '" definido como ' + novoCodigo + '.');
+        } catch (e) {
+            alert("Não foi possível salvar o código. Verifique sua conexão.");
+        }
     }
 
     window.deletarBD = async function(colecao, id) {
