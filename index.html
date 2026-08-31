@@ -220,7 +220,7 @@
             <h2>📊 Faça Seu Orçamento na Hora</h2>
             <form id="orcamentoForm">
                 <div class="form-group"><label>Seu Nome / Nome da Empresa</label><input type="text" id="venda-cliente" placeholder="Ex: João da Silva" required></div>
-                <div class="form-group"><label>Seu WhatsApp de Contato</label><input type="text" id="venda-tel" placeholder="(00) 00000-0000" required></div>
+                <div class="form-group"><label>Seu WhatsApp de Contato (com DDD)</label><input type="tel" id="venda-tel" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" autocomplete="tel-national" required></div>
 
                 <div class="form-group">
                     <label>Qual serviço deseja realizar?</label>
@@ -238,6 +238,7 @@
                 <div class="form-group" style="background: #faf8f2; padding: 15px; border-radius: 10px; border: 1px dashed var(--border);">
                     <label>🖼️ Enviar Logotipo ou Referência da Arte (Opcional)</label>
                     <input type="file" id="venda-logo" accept="image/*" onchange="previewLogoUpload(this)">
+                    <p class="count-note" style="margin-top:6px;">Formatos aceitos: JPG, PNG e similares. A imagem é otimizada automaticamente antes do envio.</p>
                     <div style="margin-top: 10px; text-align: center;">
                         <img id="logo-preview-element" class="preview-logo" alt="Preview">
                     </div>
@@ -584,19 +585,104 @@
         document.getElementById(`tab-${tab}-btn`).classList.add('active');
     }
 
-    // --- CONVERSÃO E PREVIEW DO LOGO (inalterada) ---
+    // --- MÁSCARA DE TELEFONE BRASILEIRO COM DDD ---
+    // Formata automaticamente durante a digitação:
+    //   Celular (11 dígitos): (00) 00000-0000
+    //   Fixo    (10 dígitos): (00) 0000-0000
+    function aplicarMascaraTelefone(valor) {
+        const digitos = valor.replace(/\D/g, '').slice(0, 11); // DDD + número, no máximo 11 dígitos
+        if (digitos.length === 0) return '';
+        if (digitos.length <= 2) return '(' + digitos;
+        const ddd = digitos.slice(0, 2);
+        const resto = digitos.slice(2);
+        if (resto.length <= 4) return '(' + ddd + ') ' + resto;
+        const corte = resto.length > 8 ? 5 : 4; // celular tem 9 dígitos, fixo tem 8
+        return '(' + ddd + ') ' + resto.slice(0, corte) + '-' + resto.slice(corte);
+    }
+
+    function telefoneValidoBR(valor) {
+        const digitos = valor.replace(/\D/g, '');
+        return digitos.length === 10 || digitos.length === 11; // DDD + 8 ou 9 dígitos
+    }
+
+    const campoTel = document.getElementById('venda-tel');
+    campoTel.addEventListener('input', function() {
+        this.value = aplicarMascaraTelefone(this.value);
+    });
+    campoTel.addEventListener('blur', function() {
+        if (this.value && !telefoneValidoBR(this.value)) {
+            this.style.borderColor = 'var(--danger)';
+        } else {
+            this.style.borderColor = '';
+        }
+    });
+
+    // --- CONVERSÃO, COMPRESSÃO E PREVIEW DO LOGO/ARTE ---
+    // O Firestore limita cada documento a ~1 MB; por isso a imagem é redimensionada
+    // e comprimida em JPEG antes de ser anexada ao pedido.
+    const IMG_MAX_DIM = 1200;        // pixels (maior lado)
+    const IMG_QUALIDADE = 0.72;      // qualidade JPEG
+    const IMG_LIMITE_BYTES = 700000; // margem de segurança abaixo de 1 MB
+
     window.previewLogoUpload = function(input) {
-        const file = input.files;
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                base64LogoData = e.target.result;
+        const file = input.files && input.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert("Por favor, selecione um arquivo de imagem (JPG, PNG, etc.).");
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Redimensiona mantendo a proporção
+                let w = img.width, h = img.height;
+                if (Math.max(w, h) > IMG_MAX_DIM) {
+                    const escala = IMG_MAX_DIM / Math.max(w, h);
+                    w = Math.round(w * escala);
+                    h = Math.round(h * escala);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                // Fundo branco para PNGs com transparência
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+
+                let qualidade = IMG_QUALIDADE;
+                let resultado = canvas.toDataURL('image/jpeg', qualidade);
+
+                // Se ainda passar do limite, reduz a qualidade progressivamente
+                while (resultado.length > IMG_LIMITE_BYTES * 1.37 && qualidade > 0.3) {
+                    qualidade -= 0.1;
+                    resultado = canvas.toDataURL('image/jpeg', qualidade);
+                }
+
+                if (resultado.length > IMG_LIMITE_BYTES * 1.37) {
+                    alert("A imagem é muito grande mesmo após a compressão. Envie um arquivo menor (até ~2 MB).");
+                    input.value = "";
+                    base64LogoData = "";
+                    document.getElementById('logo-preview-element').style.display = 'none';
+                    return;
+                }
+
+                base64LogoData = resultado;
                 const imgEl = document.getElementById('logo-preview-element');
                 imgEl.src = base64LogoData;
                 imgEl.style.display = 'inline-block';
             };
-            reader.readAsDataURL(file);
-        }
+            img.onerror = function() {
+                alert("Não foi possível ler essa imagem. Tente outro arquivo.");
+                input.value = "";
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     // --- SERVIÇOS: LISTAGEM EM TEMPO REAL (inalterada) ---
@@ -754,6 +840,24 @@
         if (lista) lista.classList.toggle('open');
     }
 
+    // ===== Visualização ampliada da arte enviada pelo cliente =====
+    window.ampliarArte = function(src, cliente) {
+        const antigo = document.getElementById('overlay-arte');
+        if (antigo) antigo.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'overlay-arte';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px;cursor:zoom-out;';
+        overlay.onclick = function() { overlay.remove(); };
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:12px;padding:18px;max-width:92vw;max-height:92vh;overflow:auto;text-align:center;">
+                <p style="font-weight:700;color:#1a2332;margin-bottom:10px;">Arte enviada por: ${cliente || 'Cliente'}</p>
+                <img src="${src}" style="max-width:100%;max-height:78vh;border:1px solid #e3ddd0;border-radius:8px;">
+                <p style="font-size:12px;color:#6b7280;margin-top:10px;">Clique fora da imagem para fechar. Para salvar: botão direito na imagem → "Salvar imagem como..."</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
     // ===== Renderização do checklist de acompanhamento =====
     function montarChecklist(item) {
         const wrap = document.createElement('div');
@@ -875,8 +979,16 @@
                 const img = document.createElement('img');
                 img.className = 'preview-logo';
                 img.style.display = 'block';
+                img.style.cursor = 'zoom-in';
+                img.title = 'Clique para ampliar a arte';
                 img.src = item.logo;
+                img.onclick = function() { ampliarArte(item.logo, item.cliente); };
                 tdLogo.appendChild(img);
+                const link = document.createElement('button');
+                link.className = 'history-toggle';
+                link.textContent = '🔍 Ampliar arte';
+                link.onclick = function() { ampliarArte(item.logo, item.cliente); };
+                tdLogo.appendChild(link);
             } else {
                 tdLogo.innerHTML = '<span style="color:#94a3b8">Sem arquivo</span>';
             }
@@ -1050,6 +1162,7 @@
         const quantidade = parseInt(document.getElementById('quantidade').value);
 
         if(!clienteNome || !clienteTel || !servicoId) { alert("Por favor, preencha seus dados de contato e o serviço."); return; }
+        if(!telefoneValidoBR(clienteTel)) { alert("Informe um telefone válido com DDD. Exemplos: (11) 98765-4321 (celular) ou (11) 3456-7890 (fixo)."); document.getElementById('venda-tel').focus(); return; }
 
         const servico = cacheServicos[servicoId];
         let totalCusto = 0, dimensionStr = "";
@@ -1111,7 +1224,13 @@
 
     window.salvarOrcamentoBD = async function() {
         if(!orcamentoAtual) { alert("Por favor, preencha o formulário e clique em 'Calcular Valor' antes de enviar."); return; }
-        await addDoc(collection(db, "vendas"), orcamentoAtual);
+        try {
+            await addDoc(collection(db, "vendas"), orcamentoAtual);
+        } catch (e) {
+            console.error("Falha ao enviar pedido:", e);
+            alert("Não foi possível enviar o pedido. Se você anexou uma arte, tente uma imagem menor. Caso contrário, verifique sua conexão e tente novamente.");
+            return;
+        }
 
         // Monta o comprovante de envio e exibe a opção de impressão para o cliente
         montarComprovanteEnvio(orcamentoAtual);
