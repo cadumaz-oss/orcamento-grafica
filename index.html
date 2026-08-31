@@ -240,6 +240,7 @@
         <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
         <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
+        <button class="tab-btn" id="tab-despesas-btn" onclick="switchTab('despesas')" style="display:none;">💸 Despesas</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
     </div>
 
@@ -528,7 +529,72 @@
         </div>
     </div>
 
-    <!-- 📈 ABA 6: RELATÓRIOS (RESTRITA) -->
+    <!-- 💸 ABA 6: DESPESAS (RESTRITA) -->
+    <div id="section-despesas" class="system-section">
+        <div class="card">
+            <h2>💸 Lançar Nova Despesa</h2>
+            <p class="count-note" style="margin-bottom:16px;">Registre aqui os gastos da gráfica. <strong>Despesas fixas</strong> são as que se repetem todo mês (aluguel, salários, internet...); <strong>variáveis</strong> são as do dia a dia (material, energia, manutenção...). Elas entram no cálculo da <strong>receita líquida</strong> dos relatórios.</p>
+            <div class="row">
+                <div class="form-group"><label>Descrição da Despesa (Ex: Aluguel da Loja)</label><input type="text" id="d-descricao" placeholder="Ex: Compra de papel A4"></div>
+                <div class="form-group">
+                    <label>Tipo de Despesa</label>
+                    <select id="d-tipo"><option value="fixa">📌 Fixa (mensal/recorrente)</option><option value="variavel">🔄 Variável (eventual)</option></select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Valor (R$)</label><input type="number" id="d-valor" step="0.01" min="0" placeholder="Ex: 150.00"></div>
+                <div class="form-group"><label>Data da Despesa</label><input type="date" id="d-data"></div>
+            </div>
+            <div class="form-group">
+                <label>Observação (opcional)</label>
+                <textarea id="d-obs" rows="2" placeholder="Ex: referente ao mês de agosto, nota fiscal nº 123..."></textarea>
+            </div>
+            <button onclick="cadastrarDespesa()">Salvar Despesa</button>
+        </div>
+        <div class="card">
+            <h2>📋 Despesas Lançadas <span class="count-note" id="despesas-count"></span></h2>
+
+            <!-- Filtros da listagem de despesas -->
+            <div class="filter-bar">
+                <div class="filter-field">
+                    <label>De (data inicial)</label>
+                    <input type="date" id="filtro-despesas-inicio">
+                </div>
+                <div class="filter-field">
+                    <label>Até (data final)</label>
+                    <input type="date" id="filtro-despesas-fim">
+                </div>
+                <div class="filter-field">
+                    <label>Tipo</label>
+                    <select id="filtro-despesas-tipo">
+                        <option value="todos">Todos os tipos</option>
+                        <option value="fixa">📌 Fixas</option>
+                        <option value="variavel">🔄 Variáveis</option>
+                    </select>
+                </div>
+                <div class="filter-field" style="flex: 1.4;">
+                    <label>Buscar descrição</label>
+                    <input type="text" id="filtro-despesas-busca" placeholder="Digite para filtrar...">
+                </div>
+                <button class="btn-clear" onclick="limparFiltrosDespesas()">Limpar</button>
+            </div>
+
+            <div class="report-grid" style="margin-bottom:18px;">
+                <div class="report-box"><h3>📌 Total Fixas (período)</h3><p id="desp-total-fixa">R$ 0,00</p></div>
+                <div class="report-box"><h3>🔄 Total Variáveis (período)</h3><p id="desp-total-variavel">R$ 0,00</p></div>
+                <div class="report-box"><h3>💸 Total Geral (período)</h3><p id="desp-total-geral">R$ 0,00</p></div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Observação</th><th>Valor</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-despesas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📈 ABA 7: RELATÓRIOS (RESTRITA) -->
     <div id="section-relatorios" class="system-section">
         <div class="card panel-card">
             <h2>📈 Desempenho e Caixa da Gráfica</h2>
@@ -569,6 +635,14 @@
             <div class="report-grid">
                 <div class="report-box"><h3>💵 Valor Recebido (sinais + pagamentos)</h3><p id="rep-recebido-caixa">R$ 0,00</p></div>
                 <div class="report-box"><h3>⏳ A Receber (restam na entrega)</h3><p id="rep-a-receber">R$ 0,00</p></div>
+            </div>
+
+            <!-- Receita líquida: faturamento do período menos as despesas do período -->
+            <div class="report-grid">
+                <div class="report-box"><h3>📌 Despesas Fixas</h3><p id="rep-desp-fixa" style="color:var(--danger);">R$ 0,00</p></div>
+                <div class="report-box"><h3>🔄 Despesas Variáveis</h3><p id="rep-desp-variavel" style="color:var(--danger);">R$ 0,00</p></div>
+                <div class="report-box"><h3>💸 Total de Despesas</h3><p id="rep-desp-total" style="color:var(--danger);">R$ 0,00</p></div>
+                <div class="report-box" style="border-color:var(--accent-soft);"><h3>💰 Receita Líquida (Faturamento − Despesas)</h3><p id="rep-receita-liquida">R$ 0,00</p><span class="count-note" id="rep-margem">—</span></div>
             </div>
 
             <!-- Totais por status -->
@@ -774,11 +848,13 @@
         if (user) {
             loginBtn.style.display = 'none';
             document.getElementById('tab-servicos-btn').style.display = 'block';
+            document.getElementById('tab-despesas-btn').style.display = 'block';
             document.getElementById('tab-relatorios-btn').style.display = 'block';
             statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
         } else {
             loginBtn.style.display = 'block';
             document.getElementById('tab-servicos-btn').style.display = 'none';
+            document.getElementById('tab-despesas-btn').style.display = 'none';
             document.getElementById('tab-relatorios-btn').style.display = 'none';
             statusArea.innerHTML = `<span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>`;
             switchTab('cliente-portal');
@@ -1846,6 +1922,27 @@
         document.getElementById('rep-recebido-caixa').innerText = `R$ ${fmtMoeda(totalRecebidoCaixa)}`;
         document.getElementById('rep-a-receber').innerText = `R$ ${fmtMoeda(totalAReceber)}`;
 
+        // Despesas do mesmo período do relatório (fixas + variáveis) e receita líquida
+        let totalDespFixa = 0, totalDespVariavel = 0;
+        cacheDespesas.forEach(d => {
+            if (!dentroDoPeriodo(d, 'filtro-relatorio-inicio', 'filtro-relatorio-fim')) return;
+            if (d.tipo === 'fixa') totalDespFixa += d.valor;
+            else totalDespVariavel += d.valor;
+        });
+        const totalDespesas = totalDespFixa + totalDespVariavel;
+        const receitaLiquida = totalFaturamento - totalDespesas;
+        const margem = totalFaturamento > 0 ? (receitaLiquida / totalFaturamento) * 100 : 0;
+
+        document.getElementById('rep-desp-fixa').innerText = `R$ ${fmtMoeda(totalDespFixa)}`;
+        document.getElementById('rep-desp-variavel').innerText = `R$ ${fmtMoeda(totalDespVariavel)}`;
+        document.getElementById('rep-desp-total').innerText = `R$ ${fmtMoeda(totalDespesas)}`;
+        const elLiquida = document.getElementById('rep-receita-liquida');
+        elLiquida.innerText = `R$ ${fmtMoeda(receitaLiquida)}`;
+        elLiquida.style.color = receitaLiquida >= 0 ? 'var(--success)' : 'var(--danger)';
+        document.getElementById('rep-margem').innerText = totalFaturamento > 0
+            ? `Margem de ${margem.toFixed(1)}% sobre o faturamento`
+            : 'Sem faturamento no período';
+
         STATUS_ORDEM.forEach(st => {
             document.getElementById('rep-qtd-' + st).innerText = totais[st].qtd;
             document.getElementById('rep-val-' + st).innerText = `R$ ${fmtMoeda(totais[st].val)}`;
@@ -1922,6 +2019,157 @@
         snap.forEach(d => { cachePedidos.push({id: d.id, ...d.data()}); });
         cachePedidos.sort((a,b) => b.timestamp - a.timestamp);
         renderizarPedidos();
+        renderizarRelatorio();
+    });
+
+    // ===== DESPESAS: CADASTRO, LISTAGEM E FILTROS (ÁREA RESTRITA) =====
+    let cacheDespesas = []; // cache local das despesas para filtros e relatórios
+
+    // Data padrão do formulário: hoje
+    document.getElementById('d-data').value = new Date().toISOString().slice(0, 10);
+
+    window.cadastrarDespesa = async function() {
+        const descricao = document.getElementById('d-descricao').value.trim();
+        const tipo = document.getElementById('d-tipo').value;
+        const valor = parseFloat(document.getElementById('d-valor').value);
+        const data = document.getElementById('d-data').value;
+        const obs = document.getElementById('d-obs').value.trim();
+
+        if (!descricao) { alert("Informe a descrição da despesa."); document.getElementById('d-descricao').focus(); return; }
+        if (isNaN(valor) || valor <= 0) { alert("Informe um valor válido (maior que zero)."); document.getElementById('d-valor').focus(); return; }
+        if (!data) { alert("Informe a data da despesa."); document.getElementById('d-data').focus(); return; }
+
+        // Timestamp ao meio-dia para evitar que o fuso horário jogue a data para o dia anterior
+        const timestamp = new Date(data + 'T12:00:00').getTime();
+
+        try {
+            await addDoc(collection(db, "despesas"), {
+                descricao: descricao,
+                tipo: tipo === 'variavel' ? 'variavel' : 'fixa',
+                valor: valor,
+                data: new Date(timestamp).toLocaleDateString('pt-BR'),
+                timestamp: timestamp,
+                observacao: obs
+            });
+        } catch (e) {
+            console.error("Falha ao salvar despesa:", e);
+            alert("Não foi possível salvar a despesa. Verifique sua conexão.");
+            return;
+        }
+
+        alert("Despesa registrada! Ela já entra no cálculo da receita líquida dos relatórios.");
+        document.getElementById('d-descricao').value = '';
+        document.getElementById('d-valor').value = '';
+        document.getElementById('d-obs').value = '';
+        document.getElementById('d-data').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('d-descricao').focus();
+    }
+
+    window.limparFiltrosDespesas = function() {
+        document.getElementById('filtro-despesas-inicio').value = '';
+        document.getElementById('filtro-despesas-fim').value = '';
+        document.getElementById('filtro-despesas-tipo').value = 'todos';
+        document.getElementById('filtro-despesas-busca').value = '';
+        renderizarDespesas();
+    }
+    ;['filtro-despesas-inicio','filtro-despesas-fim','filtro-despesas-tipo'].forEach(id => {
+        document.getElementById(id).addEventListener('change', renderizarDespesas);
+    });
+    document.getElementById('filtro-despesas-busca').addEventListener('input', renderizarDespesas);
+
+    function despesasFiltradas() {
+        const tipoFiltro = document.getElementById('filtro-despesas-tipo').value;
+        const busca = document.getElementById('filtro-despesas-busca').value.trim().toLowerCase();
+        return cacheDespesas.filter(item => {
+            if (!dentroDoPeriodo(item, 'filtro-despesas-inicio', 'filtro-despesas-fim')) return false;
+            if (tipoFiltro !== 'todos' && item.tipo !== tipoFiltro) return false;
+            if (busca && !(item.descricao || '').toLowerCase().includes(busca)) return false;
+            return true;
+        });
+    }
+
+    function renderizarDespesas() {
+        const tbody = document.getElementById('lista-despesas');
+        tbody.innerHTML = "";
+
+        const lista = despesasFiltradas();
+        document.getElementById('despesas-count').textContent = `(${lista.length} de ${cacheDespesas.length} despesas)`;
+
+        // Totais do período filtrado
+        let totalFixa = 0, totalVariavel = 0;
+        lista.forEach(item => {
+            if (item.tipo === 'fixa') totalFixa += item.valor;
+            else totalVariavel += item.valor;
+        });
+        document.getElementById('desp-total-fixa').innerText = `R$ ${fmtMoeda(totalFixa)}`;
+        document.getElementById('desp-total-variavel').innerText = `R$ ${fmtMoeda(totalVariavel)}`;
+        document.getElementById('desp-total-geral').innerText = `R$ ${fmtMoeda(totalFixa + totalVariavel)}`;
+
+        if (lista.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 6;
+            td.innerHTML = '<div class="empty-state">Nenhuma despesa encontrada para os filtros selecionados.</div>';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        lista.forEach(item => {
+            const tr = document.createElement('tr');
+
+            const tdData = document.createElement('td');
+            tdData.textContent = item.data;
+
+            const tdDesc = document.createElement('td');
+            tdDesc.style.fontWeight = 'bold';
+            tdDesc.textContent = item.descricao;
+
+            const tdTipo = document.createElement('td');
+            const badgeTipo = document.createElement('span');
+            badgeTipo.className = 'badge';
+            if (item.tipo === 'fixa') {
+                badgeTipo.textContent = '📌 FIXA';
+                badgeTipo.style.background = '#e3ecf9';
+                badgeTipo.style.color = 'var(--info)';
+            } else {
+                badgeTipo.textContent = '🔄 VARIÁVEL';
+                badgeTipo.style.background = '#fbf0d9';
+                badgeTipo.style.color = 'var(--warning)';
+            }
+            tdTipo.appendChild(badgeTipo);
+
+            const tdObs = document.createElement('td');
+            tdObs.innerHTML = item.observacao
+                ? '<small style="white-space:pre-wrap;">' + item.observacao + '</small>'
+                : '<span style="color:#94a3b8">—</span>';
+
+            const tdValor = document.createElement('td');
+            tdValor.innerHTML = '<strong style="color:var(--danger);">R$ ' + fmtMoeda(item.valor) + '</strong>';
+
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Excluir';
+            btnDel.onclick = function() { deletarBD('despesas', item.id); };
+            tdAcoes.appendChild(btnDel);
+
+            tr.appendChild(tdData);
+            tr.appendChild(tdDesc);
+            tr.appendChild(tdTipo);
+            tr.appendChild(tdObs);
+            tr.appendChild(tdValor);
+            tr.appendChild(tdAcoes);
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Listagem em tempo real das despesas (atualiza a guia e os relatórios)
+    onSnapshot(collection(db, "despesas"), (snap) => {
+        cacheDespesas = [];
+        snap.forEach(d => { cacheDespesas.push({id: d.id, ...d.data()}); });
+        cacheDespesas.sort((a,b) => b.timestamp - a.timestamp);
+        renderizarDespesas();
         renderizarRelatorio();
     });
 
