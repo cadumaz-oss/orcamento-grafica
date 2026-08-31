@@ -245,10 +245,8 @@
 
                 <div class="form-group">
                     <label>Acabamentos Adicionais</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-item"><input type="checkbox" id="acab_bastao" value="15.00"> Preciso de Bastão e Cordão (+R$ 15,00)</label>
-                        <label class="checkbox-item"><input type="checkbox" id="acab_ilhos" value="10.00"> Preciso de Ilhós nas Bordas (+R$ 10,00)</label>
-                        <label class="checkbox-item"><input type="checkbox" id="acab_instalacao" value="180.00"> Preciso que instalem no local (+R$ 180,00)</label>
+                    <div class="checkbox-group" id="acabamentos-container">
+                        <div style="color:#94a3b8; font-size:13px;">Carregando opções de acabamento...</div>
                     </div>
                 </div>
                 <button type="button" class="btn-accent" onclick="gerarOrcamento()">Calcular Valor do Orçamento</button>
@@ -350,6 +348,24 @@
                 <table>
                     <thead><tr><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Ações</th></tr></thead>
                     <tbody id="lista-servicos"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <h2>✨ Cadastrar Acabamento Adicional</h2>
+            <div class="row">
+                <div class="form-group"><label>Nome do Acabamento (Ex: Bastão e Cordão)</label><input type="text" id="a-nome" placeholder="Ex: Ilhós nas Bordas"></div>
+                <div class="form-group"><label>Valor Cobrado (R$)</label><input type="number" id="a-preco" step="0.01" min="0" placeholder="Ex: 10.00"></div>
+            </div>
+            <button onclick="cadastrarAcabamento()">Salvar Acabamento</button>
+            <p class="count-note" style="margin-top:10px;">Os acabamentos cadastrados aparecem automaticamente como opções de marcação no orçamento do cliente e entram no cálculo do valor.</p>
+        </div>
+        <div class="card">
+            <h2>🧩 Acabamentos Oferecidos aos Clientes</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Acabamento</th><th>Valor</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-acabamentos"></tbody>
                 </table>
             </div>
         </div>
@@ -631,6 +647,74 @@
             lista.appendChild(tr);
         });
     });
+
+    // ===== ACABAMENTOS ADICIONAIS: CADASTRO E LISTAGEM EM TEMPO REAL =====
+    let cacheAcabamentos = {};
+
+    onSnapshot(collection(db, "acabamentos"), (snap) => {
+        const container = document.getElementById('acabamentos-container');
+        const lista = document.getElementById('lista-acabamentos');
+        container.innerHTML = "";
+        lista.innerHTML = "";
+        cacheAcabamentos = {};
+
+        if (snap.empty) {
+            container.innerHTML = '<div style="color:#94a3b8; font-size:13px;">Nenhum acabamento adicional disponível no momento.</div>';
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 3;
+            td.innerHTML = '<div class="empty-state">Nenhum acabamento cadastrado. Use o formulário acima para adicionar.</div>';
+            tr.appendChild(td);
+            lista.appendChild(tr);
+            return;
+        }
+
+        snap.forEach(d => {
+            const a = d.data();
+            cacheAcabamentos[d.id] = a;
+            const valorFmt = a.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+            // Checkbox no portal do cliente
+            const lbl = document.createElement('label');
+            lbl.className = 'checkbox-item';
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'acabamento-check';
+            chk.value = a.preco;
+            chk.dataset.nome = a.nome;
+            lbl.appendChild(chk);
+            lbl.appendChild(document.createTextNode(' ' + a.nome + ' (+R$ ' + valorFmt + ')'));
+            container.appendChild(lbl);
+
+            // Linha na tabela do painel restrito
+            const tr = document.createElement('tr');
+            const tdNome = document.createElement('td');
+            tdNome.style.fontWeight = 'bold';
+            tdNome.textContent = a.nome;
+            const tdPreco = document.createElement('td');
+            tdPreco.textContent = "R$ " + valorFmt;
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Excluir';
+            btnDel.onclick = function() { deletarBD('acabamentos', d.id); };
+            tdAcoes.appendChild(btnDel);
+            tr.appendChild(tdNome);
+            tr.appendChild(tdPreco);
+            tr.appendChild(tdAcoes);
+            lista.appendChild(tr);
+        });
+    });
+
+    window.cadastrarAcabamento = async function() {
+        const nome = document.getElementById('a-nome').value.trim();
+        const preco = parseFloat(document.getElementById('a-preco').value);
+        if (!nome || isNaN(preco) || preco < 0) { alert("Preencha o nome e o valor do acabamento."); return; }
+        await addDoc(collection(db, "acabamentos"), { nome, preco });
+        alert("Acabamento adicionado! Ele já está visível no orçamento do cliente.");
+        document.getElementById('a-nome').value = "";
+        document.getElementById('a-preco').value = "";
+    }
 
     // ===== Atualização de status com registro de data/hora =====
     window.atualizarStatusPedido = async function(id, novoStatus) {
@@ -981,9 +1065,11 @@
         }
 
         let totalAdicionais = 0;
-        ;['acab_bastao','acab_ilhos','acab_instalacao'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el && el.checked) totalAdicionais += parseFloat(el.value);
+        const acabamentosSelecionados = [];
+        document.querySelectorAll('.acabamento-check:checked').forEach(el => {
+            const valor = parseFloat(el.value) || 0;
+            totalAdicionais += valor;
+            acabamentosSelecionados.push({ nome: el.dataset.nome || 'Acabamento', valor: valor });
         });
 
         orcamentoAtual = {
@@ -995,6 +1081,8 @@
             medidas: dimensionStr,
             qtd: quantidade,
             logo: base64LogoData,
+            acabamentos: acabamentosSelecionados,
+            totalAcabamentos: totalAdicionais,
             total: totalCusto + totalAdicionais,
             // Campos adicionais de acompanhamento (não substituem nenhum campo existente)
             status: 'recebido',
@@ -1002,6 +1090,9 @@
         };
 
         let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
+        let visualAcabamentos = acabamentosSelecionados.length
+            ? `<div class="receipt-row"><strong>Acabamentos:</strong><span style="text-align:right;">${acabamentosSelecionados.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>')}</span></div>`
+            : `<div class="receipt-row"><strong>Acabamentos:</strong><span>Nenhum</span></div>`;
 
         // Novo cálculo: esconde o botão de impressão até que o pedido seja enviado
         document.getElementById('btn-imprimir-comprovante').style.display = 'none';
@@ -1012,6 +1103,7 @@
             <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
             <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
             <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
+            ${visualAcabamentos}
             ${visualLogo}
             <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
         `;
@@ -1029,6 +1121,7 @@
             <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
             <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
             <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
+            <div class="receipt-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${orcamentoAtual.acabamentos && orcamentoAtual.acabamentos.length ? orcamentoAtual.acabamentos.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>') : 'Nenhum'}</span></div>
             <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
             <p style="text-align:center; margin-top:16px; font-size:13px; color:#6b7280;">Nossa equipe entrará em contato pelo WhatsApp informado.<br>Use o botão abaixo para <strong>imprimir ou salvar o comprovante em PDF</strong>.</p>
         `;
@@ -1047,6 +1140,9 @@
         const subtituloGrafica = document.getElementById('header-subtitulo-grafica').textContent;
         const dataHoraEnvio = new Date().toLocaleString('pt-BR');
         const visualLogo = pedido.logo ? `<div style="text-align:center;margin:12px 0;"><img src="${pedido.logo}" style="max-height:90px;border:1px solid #cbd5e1;padding:3px;border-radius:6px;"></div>` : '';
+        const acabamentosTexto = pedido.acabamentos && pedido.acabamentos.length
+            ? pedido.acabamentos.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>')
+            : 'Nenhum';
 
         document.getElementById('area-impressao-comprovante').innerHTML = `
             <div class="comp-wrap">
@@ -1061,6 +1157,7 @@
                 <div class="comp-row"><strong>Serviço:</strong> <span>${pedido.servico}</span></div>
                 <div class="comp-row"><strong>Especificação:</strong> <span>${pedido.medidas}</span></div>
                 <div class="comp-row"><strong>Quantidade:</strong> <span>${pedido.qtd}x</span></div>
+                <div class="comp-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${acabamentosTexto}</span></div>
                 <div class="comp-row"><strong>Situação:</strong> <span>Enviado para aprovação da gráfica</span></div>
                 ${visualLogo}
                 <div class="comp-total"><span>VALOR ESTIMADO:</span><span>R$ ${pedido.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
