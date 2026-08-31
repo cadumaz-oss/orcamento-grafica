@@ -76,6 +76,7 @@
         button:active { transform: scale(0.98); }
 
         .receipt { border: 1px dashed #c9bfa4; padding: 22px; background: #fdfcf8; min-height: 250px; border-radius: 10px; }
+        .pdv-resumo-scroll.receipt { min-height: 0; padding: 12px; border: none; background: transparent; }
         .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .receipt-header h3 { font-family: 'Playfair Display', Georgia, serif; color: var(--primary); }
         .receipt-header p { font-size: 12px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
@@ -162,21 +163,78 @@
         .btn-quitar:hover { background: #115e59; box-shadow: none; }
 
         /* ===== CARRINHO DO PDV ===== */
-        .cart-list { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+        .cart-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; overflow-y: auto; flex: 1; min-height: 0; }
         .cart-item {
-            display: flex; justify-content: space-between; align-items: center; gap: 12px;
-            background: #faf8f2; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            background: #faf8f2; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; flex-shrink: 0;
         }
-        .cart-item .ci-info { flex: 1; font-size: 14px; }
-        .cart-item .ci-info strong { color: var(--primary); display: block; margin-bottom: 2px; }
-        .cart-item .ci-info small { color: var(--text-soft); display: block; }
-        .cart-item .ci-total { font-weight: 700; color: var(--primary); white-space: nowrap; }
-        .cart-empty { text-align: center; color: #94a3b8; font-size: 13.5px; padding: 18px 10px; border: 1px dashed var(--border); border-radius: 10px; background: #fdfcf8; }
+        .cart-item .ci-info { flex: 1; font-size: 12.5px; min-width: 0; }
+        .cart-item .ci-info strong { color: var(--primary); display: block; margin-bottom: 1px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item .ci-info small { color: var(--text-soft); display: block; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item .ci-total { font-weight: 700; color: var(--primary); white-space: nowrap; font-size: 13px; }
+        .cart-empty { text-align: center; color: #94a3b8; font-size: 12.5px; padding: 14px 8px; border: 1px dashed var(--border); border-radius: 8px; background: #fdfcf8; }
         .cart-total-row {
-            display: flex; justify-content: space-between; align-items: center; margin-top: 6px;
+            display: flex; justify-content: space-between; align-items: center; margin-top: 4px; flex-shrink: 0;
             background: linear-gradient(135deg, #faf6ea, #f3ecd9); border-left: 4px solid var(--accent);
-            padding: 13px 16px; border-radius: 10px; font-size: 17px; font-weight: 700; color: var(--primary);
+            padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 700; color: var(--primary);
         }
+
+        /* ===== LAYOUT PDV COMPACTO — SEM ROLAGEM ===== */
+        #section-pdv { display: none; }
+        #section-pdv.pdv-ativo { display: flex; flex-direction: column; height: calc(100vh - 207px); min-height: 520px; }
+        .pdv-grid {
+            display: grid; grid-template-columns: 340px 1fr 320px; gap: 12px;
+            flex: 1; min-height: 0; overflow: hidden;
+        }
+        .pdv-col {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+            box-shadow: var(--shadow); padding: 14px; display: flex; flex-direction: column;
+            overflow: hidden; min-height: 0;
+        }
+        .pdv-col h3 {
+            font-family: 'Playfair Display', Georgia, serif; font-size: 14px; color: var(--primary);
+            margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+        }
+        .pdv-col .form-group { margin-bottom: 8px; flex-shrink: 0; }
+        .pdv-col label { font-size: 11px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pdv-col input, .pdv-col select, .pdv-col textarea { padding: 7px 9px; font-size: 13px; border-radius: 7px; }
+        .pdv-col textarea { min-height: 36px; resize: none; }
+        .pdv-col .row { gap: 8px; }
+        .pdv-col button { padding: 9px; font-size: 13px; border-radius: 7px; }
+        .pdv-scroll { overflow-y: auto; flex: 1; min-height: 0; }
+        .pdv-footer { flex-shrink: 0; margin-top: 8px; }
+        .pdv-acabamentos-lista { max-height: 90px; overflow-y: auto; }
+        .pdv-acabamentos-lista .checkbox-item { font-size: 12px; margin-bottom: 5px; padding: 2px 0; }
+        .pdv-acabamentos-lista .checkbox-item input { width: 14px; height: 14px; }
+        .pdv-resumo-scroll { overflow-y: auto; flex: 1; min-height: 0; font-size: 12.5px; }
+        .pdv-resumo-scroll .receipt-row { font-size: 12.5px; margin-bottom: 6px; }
+        .pdv-resumo-scroll .total-box { font-size: 15px; padding: 10px 12px; margin-top: 10px; }
+        .pdv-codigo-input { font-size: 16px !important; font-weight: 700; letter-spacing: 1px; text-align: center; }
+        .pdv-codigo-feedback { font-size: 11px !important; min-height: 16px; }
+        .pdv-btn-add { background: var(--accent); font-size: 14px !important; padding: 10px !important; }
+        .pdv-btn-add:hover { background: var(--accent-hover); }
+        .pdv-btn-registrar { background: var(--success); font-size: 14px !important; padding: 11px !important; }
+        .pdv-btn-registrar:hover { background: #115e59; }
+        .pdv-btn-imprimir { background: var(--info); font-size: 12px !important; padding: 8px !important; }
+        .pdv-btn-imprimir:hover { background: #1e40af; }
+        .pdv-section-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-soft); margin: 10px 0 6px; flex-shrink: 0;
+        }
+        @media (max-width: 1100px) {
+            .pdv-grid { grid-template-columns: 1fr; overflow-y: auto; }
+            #section-pdv.pdv-ativo { height: auto; }
+        }
+
+        /* ===== MODO COMPACTO DO BODY QUANDO PDV ATIVO ===== */
+        body.pdv-modo-compacto { padding: 12px 16px 16px; overflow: hidden; }
+        body.pdv-modo-compacto .container { max-width: 100%; }
+        body.pdv-modo-compacto header { padding: 14px 20px; }
+        body.pdv-modo-compacto header h1 { font-size: 22px; }
+        body.pdv-modo-compacto header p { font-size: 11px; }
+        body.pdv-modo-compacto .tabs { margin-bottom: 12px; padding: 6px; }
+        body.pdv-modo-compacto .tab-btn { padding: 8px 14px; font-size: 13px; }
 
         .history-toggle { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 0; width: auto; text-align: left; }
         .history-toggle:hover { text-decoration: underline; background: none; box-shadow: none; }
@@ -298,85 +356,91 @@
 
     <!-- 🧾 ABA 2: PDV — VENDA RÁPIDA (ACESSO LIVRE, FORA DA ÁREA RESTRITA) -->
     <div id="section-pdv" class="system-section">
-        <div class="card">
-            <h2>🧾 PDV — Lançamento Rápido de Venda (Balcão)</h2>
-            <p class="count-note" style="margin-bottom:16px;">Esta tela fica fora da área restrita: qualquer atendente pode registrar vendas feitas na loja. Adicione <strong>quantos itens quiser</strong> à mesma venda e, se o cliente quiser, registre um <strong>sinal (pagamento parcial)</strong> — o restante é cobrado na entrega.</p>
+        <div class="pdv-grid">
+            <!-- COLUNA 1: DADOS DO CLIENTE + ITEM -->
+            <div class="pdv-col">
+                <h3>👤 Cliente</h3>
+                <div class="form-group"><label>Nome (opcional)</label><input type="text" id="pdv-cliente" placeholder="Cliente Balcão"></div>
+                <div class="form-group"><label>WhatsApp (opcional)</label><input type="tel" id="pdv-tel" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
 
-            <div class="row">
-                <div class="form-group"><label>Nome do Cliente (opcional)</label><input type="text" id="pdv-cliente" placeholder="Ex: Cliente Balcão"></div>
-                <div class="form-group"><label>Telefone / WhatsApp (opcional)</label><input type="tel" id="pdv-tel" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
-            </div>
-
-            <h2 style="font-size:16px; margin-top:10px;">🛒 Adicionar Item à Venda</h2>
-            <div class="form-group">
-                <label>⚡ Código do Serviço (lançamento rápido)</label>
-                <input type="text" id="pdv-codigo" placeholder="Digite o código e pressione Enter" autocomplete="off">
-                <p class="count-note" id="pdv-codigo-feedback" style="margin-top:6px;">Digite o código do serviço e pressione <strong>Enter</strong> para selecioná-lo automaticamente — ou escolha na lista abaixo.</p>
-            </div>
-            <div class="form-group">
-                <label>Serviço Vendido (inclui serviços internos)</label>
-                <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
-            </div>
-            <div id="pdv-dimensoes-container">
-                <div class="row form-group">
-                    <div><label>Largura (metros)</label><input type="number" id="pdv-largura" step="0.01" value="1.00"></div>
-                    <div><label>Altura (metros)</label><input type="number" id="pdv-altura" step="0.01" value="1.00"></div>
+                <div class="pdv-section-label">🛒 Adicionar Item</div>
+                <div class="form-group">
+                    <label>⚡ Código do Serviço</label>
+                    <input type="text" id="pdv-codigo" class="pdv-codigo-input" placeholder="CÓDIGO" autocomplete="off">
+                    <p class="count-note pdv-codigo-feedback" id="pdv-codigo-feedback">Digite o código e pressione <strong>Enter</strong></p>
+                </div>
+                <div class="form-group">
+                    <label>Serviço</label>
+                    <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
+                </div>
+                <div id="pdv-dimensoes-container">
+                    <div class="row form-group">
+                        <div><label>Largura (m)</label><input type="number" id="pdv-largura" step="0.01" value="1.00"></div>
+                        <div><label>Altura (m)</label><input type="number" id="pdv-altura" step="0.01" value="1.00"></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Quantidade</label><input type="number" id="pdv-quantidade" value="1" min="1"></div>
+                <div class="form-group">
+                    <label>Acabamentos</label>
+                    <div class="checkbox-group pdv-acabamentos-lista" id="pdv-acabamentos-container">
+                        <div style="color:#94a3b8; font-size:12px;">Carregando acabamentos...</div>
+                    </div>
+                </div>
+                <div class="pdv-footer">
+                    <button type="button" class="pdv-btn-add" onclick="adicionarItemPDV()">➕ Adicionar Item</button>
                 </div>
             </div>
-            <div class="form-group"><label>Quantidade</label><input type="number" id="pdv-quantidade" value="1" min="1"></div>
-            <div class="form-group">
-                <label>Acabamentos Adicionais (deste item)</label>
-                <div class="checkbox-group" id="pdv-acabamentos-container">
-                    <div style="color:#94a3b8; font-size:13px;">Carregando acabamentos...</div>
+
+            <!-- COLUNA 2: CARRINHO -->
+            <div class="pdv-col">
+                <h3>🧺 Itens da Venda <span class="count-note" id="pdv-carrinho-count"></span></h3>
+                <div class="cart-list" id="pdv-carrinho-lista"></div>
+                <div class="cart-total-row" id="pdv-carrinho-total-row" style="display:none;">
+                    <span>TOTAL:</span><span id="pdv-carrinho-total">R$ 0,00</span>
                 </div>
             </div>
-            <button type="button" class="btn-accent" onclick="adicionarItemPDV()">➕ Adicionar Item à Venda</button>
 
-            <h2 style="font-size:16px; margin-top:26px;">🧺 Itens desta Venda <span class="count-note" id="pdv-carrinho-count"></span></h2>
-            <div class="cart-list" id="pdv-carrinho-lista"></div>
-            <div class="cart-total-row" id="pdv-carrinho-total-row" style="display:none;">
-                <span>TOTAL DOS ITENS:</span><span id="pdv-carrinho-total">R$ 0,00</span>
-            </div>
-
-            <h2 style="font-size:16px; margin-top:26px;">💰 Pagamento</h2>
-            <div class="row">
+            <!-- COLUNA 3: PAGAMENTO + RESUMO -->
+            <div class="pdv-col">
+                <h3>💰 Pagamento</h3>
                 <div class="form-group">
                     <label>Forma de Pagamento</label>
                     <select id="pdv-pagamento-tipo">
-                        <option value="total" selected>💵 Pagamento total agora</option>
-                        <option value="parcial">💰 Sinal agora — restante na entrega</option>
-                        <option value="entrega">📦 Pagar tudo na entrega</option>
+                        <option value="total" selected>💵 Total agora</option>
+                        <option value="parcial">💰 Sinal — restante na entrega</option>
+                        <option value="entrega">📦 Tudo na entrega</option>
                     </select>
                 </div>
                 <div class="form-group" id="pdv-sinal-group" style="display:none;">
-                    <label>Valor do Sinal Recebido (R$)</label>
+                    <label>Valor do Sinal (R$)</label>
                     <input type="number" id="pdv-valor-sinal" step="0.01" min="0" placeholder="Ex: 50.00">
                 </div>
-            </div>
-            <div class="form-group">
-                <label>Situação do Pedido</label>
-                <select id="pdv-status">
-                    <option value="finalizado" selected>✅ Já entregue (Finalizado)</option>
-                    <option value="andamento">⏳ Em produção (Em Andamento)</option>
-                    <option value="recebido">📥 Recebido (a produzir)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>📝 Observação (opcional)</label>
-                <textarea id="pdv-observacao" rows="2" placeholder="Ex: entregar após as 14h, arte aprovada pelo cliente, retirar no balcão..."></textarea>
-                <p class="count-note" style="margin-top:6px;">Anotações internas da venda: aparecem no resumo, no comprovante e na tela de Pedidos Recebidos.</p>
+                <div class="form-group">
+                    <label>Situação do Pedido</label>
+                    <select id="pdv-status">
+                        <option value="finalizado" selected>✅ Já entregue</option>
+                        <option value="andamento">⏳ Em produção</option>
+                        <option value="recebido">📥 Recebido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Observação</label>
+                    <textarea id="pdv-observacao" rows="2" placeholder="Ex: entregar após as 14h..."></textarea>
+                </div>
+
+                <div class="pdv-section-label">🧾 Resumo</div>
+                <div class="pdv-resumo-scroll receipt" id="pdv-recibo">
+                    <div id="pdv-recibo-conteudo" style="text-align:center; padding-top:30px; color:#94a3b8; font-size:12.5px;">Adicione itens à venda.</div>
+                </div>
+
+                <div class="pdv-footer">
+                    <button class="pdv-btn-registrar" onclick="registrarVendaPDV()">💾 Registrar Venda</button>
+                    <button class="pdv-btn-imprimir" id="btn-imprimir-comprovante-pdv" onclick="imprimirComprovante()" style="display:none; margin-top:6px;">🖨️ Imprimir Comprovante</button>
+                </div>
             </div>
         </div>
-
-        <div class="card">
-            <h2>🧾 Resumo da Venda</h2>
-            <div class="receipt" id="pdv-recibo">
-                <div id="pdv-recibo-conteudo" style="text-align: center; padding-top: 50px; color: #94a3b8;">Adicione itens à venda no painel ao lado.</div>
-            </div>
-            <div class="actions">
-                <button class="btn-print" onclick="registrarVendaPDV()">💾 Registrar Venda no Sistema</button>
-                <button class="btn-accent" id="btn-imprimir-comprovante-pdv" onclick="imprimirComprovante()" style="display:none;">🖨️ Imprimir Comprovante da Venda</button>
-            </div>
+        <div style="text-align:center; margin-top:8px; font-size:11px; color:var(--text-soft); flex-shrink:0;">
+            ⚡ <strong>F2</strong> = novo item &nbsp;|&nbsp; <strong>Enter</strong> na quantidade = adicionar &nbsp;|&nbsp; <strong>F4</strong> = registrar venda
         </div>
     </div>
 
@@ -868,11 +932,23 @@
         document.getElementById('section-cliente-portal').style.removeProperty('display');
         document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
 
+        // Remove o modo compacto do PDV ao sair da aba
+        document.getElementById('section-pdv').classList.remove('pdv-ativo');
+        document.body.classList.remove('pdv-modo-compacto');
+
         if (tab === 'cliente-portal') {
             document.getElementById('section-cliente-portal').style.display = 'contents';
         } else {
             document.getElementById('section-cliente-portal').style.display = 'none';
             document.getElementById('section-' + tab).style.display = 'block';
+        }
+
+        // Ativa o modo compacto quando o PDV estiver visível
+        if (tab === 'pdv') {
+            document.getElementById('section-pdv').classList.add('pdv-ativo');
+            document.body.classList.add('pdv-modo-compacto');
+            // Foco automático no campo de código para lançamento imediato
+            setTimeout(() => document.getElementById('pdv-codigo').focus(), 100);
         }
 
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1371,7 +1447,7 @@
     function atualizarResumoPDV() {
         const box = document.getElementById('pdv-recibo-conteudo');
         if (carrinhoPDV.length === 0) {
-            box.innerHTML = '<div style="text-align:center;padding-top:50px;color:#94a3b8;">Adicione itens à venda no painel ao lado.</div>';
+            box.innerHTML = '<div style="text-align:center;padding-top:30px;color:#94a3b8;font-size:12.5px;">Adicione itens à venda.</div>';
             return;
         }
 
@@ -1405,15 +1481,15 @@
         }
 
         box.innerHTML = `
-            <div class="receipt-header"><h3>Venda de Balcão</h3><p>Conferência antes de registrar</p></div>
+            <div class="receipt-header" style="margin-bottom:10px; padding-bottom:8px;"><h3 style="font-size:13px;">Venda de Balcão</h3><p style="font-size:10px;">Conferência antes de registrar</p></div>
             <div class="receipt-row"><strong>Cliente:</strong> <span>${cliente}</span></div>
             <div class="receipt-row"><strong>Telefone:</strong> <span>${telefone}</span></div>
             <div class="receipt-row"><strong>Itens:</strong> <span>${carrinhoPDV.length}</span></div>
             ${itensHtml}
             ${pagamentoHtml}
             <div class="receipt-row"><strong>Situação:</strong> <span>${STATUS_ROTULO[statusEscolhido]}</span></div>
-            ${observacao ? `<div class="receipt-row" style="align-items:flex-start;"><strong>📝 Observação:</strong> <span style="text-align:right; white-space:pre-wrap;">${observacao}</span></div>` : ''}
-            <div class="total-box"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(total)}</span></div>
+            ${observacao ? `<div class="receipt-row" style="align-items:flex-start;"><strong>📝 Obs:</strong> <span style="text-align:right; white-space:pre-wrap;">${observacao}</span></div>` : ''}
+            <div class="total-box"><span>TOTAL:</span><span>R$ ${fmtMoeda(total)}</span></div>
         `;
     }
 
@@ -2385,6 +2461,31 @@
         window.print();
         setTimeout(() => document.body.classList.remove('imprimindo-comprovante'), 500);
     }
+
+    // ===== ATALHOS DE TECLADO DO PDV (agilidade no balcão) =====
+    document.addEventListener('keydown', function(e) {
+        // Só funciona quando a aba PDV está visível
+        if (!document.getElementById('section-pdv').classList.contains('pdv-ativo')) return;
+
+        // F2 → foca no campo de código para novo lançamento
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('pdv-codigo').focus();
+            document.getElementById('pdv-codigo').select();
+        }
+
+        // Enter no campo de quantidade → adiciona o item direto
+        if (e.key === 'Enter' && document.activeElement === document.getElementById('pdv-quantidade')) {
+            e.preventDefault();
+            adicionarItemPDV();
+        }
+
+        // F4 → registra a venda (finaliza)
+        if (e.key === 'F4') {
+            e.preventDefault();
+            registrarVendaPDV();
+        }
+    });
 
     // Inicializa o carrinho do PDV vazio
     renderizarCarrinhoPDV();
