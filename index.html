@@ -3,746 +3,954 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sua Gráfica Express - Portal & Gestão</title>
+    <title>Portal de Orçamentos & Gestão - Gráfica Rápida</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- ESTILOS GLOBAIS E VARIÁVEIS --- */
         :root {
-            --primary: #1a73e8;
-            --primary-hover: #1557b0;
-            --success: #137333;
-            --warning: #b35c00;
-            --danger: #d93025;
-            --dark: #202124;
-            --gray-bg: #f8f9fa;
+            --primary: #1a2332;
+            --primary-deep: #111827;
+            --accent: #b8860b;
+            --accent-soft: #d4af37;
+            --accent-hover: #9a7209;
+            --bg: #f6f4ef;
             --card-bg: #ffffff;
-            --border: #dadce0;
-            --text: #3c4043;
+            --text: #3d4653;
+            --text-soft: #6b7280;
+            --border: #e3ddd0;
+            --success: #0f766e;
+            --danger: #b91c1c;
+            --info: #1d4ed8;
+            --warning: #b45309;
+            --shadow: 0 10px 30px -12px rgba(26, 35, 50, 0.18);
+            --radius: 14px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 24px 20px 60px; }
 
-        body {
-            background-color: var(--gray-bg);
-            color: var(--text);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .container { max-width: 1500px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--primary-deep) 0%, var(--primary) 60%, #24344d 100%);
+            color: #f5f1e6; padding: 26px 30px; border-radius: var(--radius);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+            box-shadow: var(--shadow); border-bottom: 3px solid var(--accent-soft);
         }
-
-        /* --- COMPONENTES VISUAIS (CARDS E BOTÕES) --- */
-        .header {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header h1 { font-size: 28px; font-weight: 600; }
-        .header p { opacity: 0.9; font-size: 14px; margin-top: 5px; }
-
-        .nav-buttons { display: flex; gap: 10px; }
-        .btn-nav {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.4);
-            padding: 10px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        .btn-nav:hover { background: rgba(255,255,255,0.3); }
-        .btn-nav.active { background: white; color: var(--primary); font-weight: 600; }
+        header h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; letter-spacing: 0.4px; color: #f8f4e8; }
+        header p { color: #c8bfa5; font-size: 13px; margin-top: 4px; letter-spacing: 1.5px; text-transform: uppercase; }
 
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            background: var(--card-bg); padding: 28px; border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 4px;
+        }
+        h2 {
+            margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+            color: var(--primary); display: flex; justify-content: space-between; align-items: center;
+            font-family: 'Playfair Display', Georgia, serif; font-size: 21px; letter-spacing: 0.3px;
+        }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--primary); letter-spacing: 0.3px; }
+        input, select {
+            width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 9px;
+            font-size: 15px; background: #fdfcf9; color: var(--text); transition: border-color 0.18s, box-shadow 0.18s;
+        }
+        input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12); background: #fff; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .checkbox-group { background: #faf8f2; padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; cursor: pointer; font-size: 14px; }
+        .checkbox-item:last-child { margin-bottom: 0; }
+        .checkbox-item input { width: auto; accent-color: var(--accent); }
+
+        button {
+            width: 100%; background: var(--primary); color: #f5f1e6; border: none; padding: 13px;
+            font-size: 15px; font-weight: 600; border-radius: 9px; cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease; letter-spacing: 0.3px;
+        }
+        button:hover { background: #24344d; box-shadow: 0 6px 16px -6px rgba(26,35,50,0.35); }
+        button:active { transform: scale(0.98); }
+
+        .receipt { border: 1px dashed #c9bfa4; padding: 22px; background: #fdfcf8; min-height: 250px; border-radius: 10px; }
+        .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .receipt-header h3 { font-family: 'Playfair Display', Georgia, serif; color: var(--primary); }
+        .receipt-header p { font-size: 12px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
+        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; gap: 12px; }
+        .total-box {
+            background: linear-gradient(135deg, #faf6ea, #f3ecd9); padding: 16px; border-radius: 10px; margin-top: 20px;
+            font-size: 19px; font-weight: 700; display: flex; justify-content: space-between; color: var(--primary);
+            border-left: 4px solid var(--accent);
         }
 
-        .card h2 {
-            font-size: 20px;
-            color: var(--dark);
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--gray-bg);
-            padding-bottom: 10px;
-        }
+        .actions { margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .btn-print { background: var(--success); } .btn-print:hover { background: #115e59; }
+        .btn-accent { background: var(--accent); } .btn-accent:hover { background: var(--accent-hover); }
+        .btn-logout { background: rgba(255,255,255,0.12); color: #f5f1e6; width: auto; padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 7px; cursor: pointer; border: 1px solid rgba(255,255,255,0.25); }
+        .btn-logout:hover { background: rgba(255,255,255,0.22); box-shadow: none; }
+        .btn-del { background: transparent; color: var(--danger); padding: 5px 10px; font-size: 12px; border-radius: 6px; width: auto; cursor: pointer; border: 1px solid #f0c8c8; font-weight: 600; }
+        .btn-del:hover { background: #fef2f2; box-shadow: none; }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
-        }
+        .panel-card { grid-column: 1 / -1; }
+        .system-section { display: none; grid-column: 1 / -1; }
 
-        /* --- FORMULÁRIOS --- */
-        .form-group { margin-bottom: 18px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--dark);
-        }
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .checkbox-group {
-            margin: 12px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            cursor: pointer;
-        }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 15px; }
+        th, td { padding: 13px 12px; border-bottom: 1px solid #efe9dc; vertical-align: top; }
+        th { background: #faf8f2; color: var(--primary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fbf9f3; }
+        .badge { background: #eef2f7; color: var(--primary); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
 
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-align: center;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; padding: 6px 12px; font-size: 12px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 22px; grid-column: 1/-1; flex-wrap: wrap; background: #e9e3d5; padding: 8px; border-radius: 12px; }
+        .tab-btn { background: transparent; color: var(--text); width: auto; padding: 11px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; font-size: 14px; }
+        .tab-btn:hover { background: rgba(255,255,255,0.55); box-shadow: none; }
+        .tab-btn.active { background: var(--primary); color: #f5f1e6; box-shadow: 0 4px 10px -4px rgba(26,35,50,0.4); }
 
-        /* --- TABELAS --- */
-        .table-responsive { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th, td { padding: 14px; border-bottom: 1px solid var(--border); }
-        th { background-color: var(--gray-bg); color: var(--dark); font-weight: 600; }
-        th.sortable { cursor: pointer; user-select: none; }
-        th.sortable:hover { background-color: #ededed; }
-
-        /* --- STATUS COLORIDOS --- */
-        .status-select {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 13px;
-            border: 1px solid transparent;
-            cursor: pointer;
+        .preview-logo { max-width: 80px; max-height: 80px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; display: none; background: #fff; padding: 3px; }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 22px; }
+        .report-box {
+            background: linear-gradient(160deg, #ffffff, #faf7ef); border: 1px solid var(--border);
+            border-radius: 12px; padding: 22px; text-align: center; position: relative; overflow: hidden;
         }
-        .status-pendente { background-color: #ffe6cc; color: var(--warning); }
-        .status-aprovado { background-color: #e6f4ea; color: var(--success); }
-        .status-andamento { background-color: #e8f0fe; color: var(--primary); }
-        .status-entregue { background-color: #f1f3f4; color: #5f6368; }
+        .report-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
+        .report-box h3 { font-size: 12px; color: var(--text-soft); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .report-box p { font-size: 27px; font-weight: 700; color: var(--primary); font-family: 'Playfair Display', Georgia, serif; }
 
-        /* --- DASHBOARDS / METRICAS --- */
-        .dash-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+        /* ===== FILTROS ===== */
+        .filter-bar {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+            background: #faf8f2; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 18px;
         }
-        .dash-card {
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--gray-bg);
-        }
-        .dash-card h4 { font-size: 13px; text-transform: uppercase; color: #5f6368; font-weight: 500; }
-        .dash-card p { font-size: 22px; font-weight: bold; color: var(--dark); margin-top: 8px; }
-        .dash-card.highlight-blue { background-color: #e8f0fe; border-color: #d2e3fc; }
-        .dash-card.highlight-blue p { color: var(--primary); }
-        .dash-card.highlight-green { background-color: #e6f4ea; border-color: #c2e7cb; }
-        .dash-card.highlight-green p { color: var(--success); }
+        .filter-bar .filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 150px; flex: 1; }
+        .filter-bar .filter-field label { margin-bottom: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-soft); }
+        .filter-bar .filter-field input, .filter-bar .filter-field select { padding: 9px 11px; font-size: 14px; }
+        .filter-bar .btn-filter { width: auto; padding: 10px 22px; font-size: 13px; background: var(--accent); }
+        .filter-bar .btn-filter:hover { background: var(--accent-hover); }
+        .filter-bar .btn-clear { width: auto; padding: 10px 18px; font-size: 13px; background: transparent; color: var(--text-soft); border: 1px solid var(--border); }
+        .filter-bar .btn-clear:hover { background: #f1ede2; box-shadow: none; }
 
-        /* --- VISIBILIDADE DAS TELAS --- */
-        .view-section { display: none; }
-        .view-section.active-view { display: block; }
-        
-        .login-box {
-            max-width: 400px;
-            margin: 60px auto;
+        /* ===== CHECKLIST DE ACOMPANHAMENTO ===== */
+        .status-checklist { display: flex; flex-direction: column; gap: 7px; min-width: 190px; }
+        .status-step {
+            display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13px; font-weight: 500;
+            padding: 6px 10px; border-radius: 8px; border: 1px solid transparent; transition: all 0.18s ease; user-select: none;
+        }
+        .status-step:hover { background: #f5f1e6; }
+        .status-step input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+        .status-step .step-label { flex: 1; }
+        .status-step .step-time { font-size: 10.5px; color: var(--text-soft); font-weight: 400; display: block; margin-top: 1px; }
+        .status-step.done { border-color: #d8cfb8; background: #faf7ee; }
+        .status-step.done .step-label { color: var(--primary); font-weight: 600; }
+        .status-step.current { border-color: var(--accent-soft); background: #fdf8e7; box-shadow: 0 2px 8px -4px rgba(184,134,11,0.35); }
+
+        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .status-pill.recebido { background: #e3ecf9; color: var(--info); }
+        .status-pill.andamento { background: #fbf0d9; color: var(--warning); }
+        .status-pill.finalizado { background: #dff0ee; color: var(--success); }
+
+        .history-toggle { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 0; width: auto; text-align: left; }
+        .history-toggle:hover { text-decoration: underline; background: none; box-shadow: none; }
+        .history-list { margin-top: 8px; padding: 10px 12px; background: #faf8f2; border-left: 3px solid var(--accent-soft); border-radius: 0 8px 8px 0; font-size: 12.5px; display: none; }
+        .history-list.open { display: block; }
+        .history-list li { margin-bottom: 5px; color: var(--text); list-style: none; }
+        .history-list li:last-child { margin-bottom: 0; }
+        .history-list .h-status { font-weight: 700; color: var(--primary); }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
+        .count-note { font-size: 12.5px; color: var(--text-soft); font-weight: 500; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .tabs, header, .filter-bar, .btn-print-report, #section-cliente-portal, #section-login, #section-pedidos, #section-servicos { display: none !important; }
+            #section-relatorios { display: block !important; }
+            .card { box-shadow: none; border: none; }
+            .report-box { border: 1px solid #ccc; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- CABEÇALHO GLOBAL -->
-    <header class="header">
+    <header>
         <div>
             <h1>Sua Gráfica Express</h1>
-            <p>Portal Público de Orçamentos & Gestão Corporativa</p>
+            <p>Portal Público & Sistema de Gestão Interna</p>
         </div>
-        <div class="nav-buttons">
-            <button class="btn-nav active" id="btnViewCliente" onclick="mudarTela('cliente')">🌐 Área do Cliente</button>
-            <button class="btn-nav" id="btnViewRestrita" onclick="mudarTela('login')">🔐 Painel da Empresa</button>
+        <div id="auth-status-area">
+            <span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>
         </div>
     </header>
 
-    <!-- ================= VISTA DO CLIENTE ================= -->
-    <main id="telaCliente" class="view-section active-view">
-        <div class="grid-2">
-            <!-- Formulário de Orçamento -->
-            <section class="card">
-                <h2>📊 Faça Seu Orçamento na Hora</h2>
-                <form id="formOrcamento" onsubmit="event.preventDefault(); processarOrcamentoProvisorio();">
-                    <div class="form-group">
-                        <label for="cNome">Seu Nome / Nome da Empresa</label>
-                        <input type="text" id="cNome" class="form-control" placeholder="Insira seu nome" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="cWhats">Seu WhatsApp de Contato</label>
-                        <input type="text" id="cWhats" class="form-control" placeholder="Ex: 11999999999" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="cServico">Qual serviço deseja realizar?</label>
-                        <select id="cServico" class="form-control" onchange="verificarCamposDimensoes()">
-                            <!-- Alimentado dinamicamente via JS -->
-                        </select>
-                    </div>
-                    
-                    <!-- Campos de Dimensões Condicionais -->
-                    <div class="grid-2" id="boxDimensoes" style="gap: 10px; margin-bottom: 0;">
-                        <div class="form-group" style="grid-column: span 1;">
-                            <label for="cLargura">Largura da Arte (metros)</label>
-                            <input type="number" id="cLargura" class="form-control" value="1.00" min="0.05" step="0.01">
-                        </div>
-                        <div class="form-group" style="grid-column: span 1;">
-                            <label for="cAltura">Altura da Arte (metros)</label>
-                            <input type="number" id="cAltura" class="form-control" value="1.00" min="0.05" step="0.01">
-                        </div>
-                    </div>
+    <!-- NAVEGAÇÃO PRINCIPAL -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Área do Cliente (Acesso Livre)</button>
+        <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Painel da Empresa (Restrito)</button>
+        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
+        <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
+        <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
+    </div>
 
-                    <div class="form-group">
-                        <label for="cQtd">Quantidade de Itens</label>
-                        <input type="number" id="cQtd" class="form-control" value="1" min="1" required>
-                    </div>
+    <!-- 🌐 ABA 1: PORTAL DO CLIENTE -->
+    <div id="section-cliente-portal" class="system-section" style="display: contents;">
+        <div class="card">
+            <h2>📊 Faça Seu Orçamento na Hora</h2>
+            <form id="orcamentoForm">
+                <div class="form-group"><label>Seu Nome / Nome da Empresa</label><input type="text" id="venda-cliente" placeholder="Ex: João da Silva" required></div>
+                <div class="form-group"><label>Seu WhatsApp de Contato</label><input type="text" id="venda-tel" placeholder="(00) 00000-0000" required></div>
 
-                    <div class="form-group">
-                        <label>Acabamentos Adicionais</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" id="acab1" value="15.00"> Preciso de Bastão e Cordão (+R$ 15,00)</label>
-                            <label class="checkbox-item"><input type="checkbox" id="acab2" value="10.00"> Preciso de Ilhós nas Bordas (+R$ 10,00)</label>
-                            <label class="checkbox-item"><input type="checkbox" id="acab3" value="180.00"> Preciso que instalem no local (+R$ 180,00)</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Calcular Valor do Orçamento</button>
-                </form>
-            </section>
-
-            <!-- Resumo e Envio -->
-            <section class="card" style="background-color: #fafafa;">
-                <h2>📄 Seu Resumo Provisório</h2>
-                <div id="wrapperResumo" style="line-height: 1.6; min-height: 120px; display: flex; align-items: center; color: #5f6368;">
-                    Preencha os campos ao lado e clique em Calcular para visualizar os valores.
-                </div>
-                <div id="boxAcaoEnvio" style="display: none; margin-top: 20px;">
-                    <button onclick="enviarPedidoAdministracao()" class="btn btn-success" style="width: 100%;">🚀 Enviar Pedido para Aprovação</button>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- ================= TELA DE LOGIN INTERMEDIÁRIA ================= -->
-    <section id="telaLogin" class="view-section">
-        <div class="card login-box">
-            <h2>🔐 Login de Funcionário / Admin</h2>
-            <form onsubmit="event.preventDefault(); executingAuthentication();">
                 <div class="form-group">
-                    <label for="loginEmail">E-mail Corporativo</label>
-                    <input type="email" id="loginEmail" class="form-control" required placeholder="admin@grafica.com">
+                    <label>Qual serviço deseja realizar?</label>
+                    <select id="venda-servico" required><option value="">Carregando produtos disponíveis...</option></select>
                 </div>
+
+                <div id="dimensoes-container">
+                    <div class="row form-group">
+                        <div><label>Largura da Arte (metros)</label><input type="number" id="largura" step="0.01" value="1.00"></div>
+                        <div><label>Altura da Arte (metros)</label><input type="number" id="altura" step="0.01" value="1.00"></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Quantidade de Itens</label><input type="number" id="quantidade" value="1" min="1" required></div>
+
+                <div class="form-group" style="background: #faf8f2; padding: 15px; border-radius: 10px; border: 1px dashed var(--border);">
+                    <label>🖼️ Enviar Logotipo ou Referência da Arte (Opcional)</label>
+                    <input type="file" id="venda-logo" accept="image/*" onchange="previewLogoUpload(this)">
+                    <div style="margin-top: 10px; text-align: center;">
+                        <img id="logo-preview-element" class="preview-logo" alt="Preview">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="loginSenha">Senha</label>
-                    <input type="password" id="loginSenha" class="form-control" required placeholder="••••••">
+                    <label>Acabamentos Adicionais</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" id="acab_bastao" value="15.00"> Preciso de Bastão e Cordão (+R$ 15,00)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="acab_ilhos" value="10.00"> Preciso de Ilhós nas Bordas (+R$ 10,00)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="acab_instalacao" value="180.00"> Preciso que instalem no local (+R$ 180,00)</label>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar no Painel Administrativo</button>
+                <button type="button" class="btn-accent" onclick="gerarOrcamento()">Calcular Valor do Orçamento</button>
             </form>
         </div>
-    </section>
 
-    <!-- ================= ÁREA RESTRITA (PAINEL ADMINISTRATIVO) ================= -->
-    <main id="telaRestrita" class="view-section">
-        
-        <!-- SEÇÃO: PEDIDOS RECEBIDOS -->
-        <section class="card">
-            <h2>📥 Orçamentos e Pedidos Enviados por Clientes</h2>
-            <div class="table-responsive">
+        <div class="card">
+            <h2>📄 Seu Resumo Provisório</h2>
+            <div class="receipt" id="recibo">
+                <div id="recibo-conteudo" style="text-align: center; padding-top: 50px; color: #94a3b8;">Preencha os campos ao lado e clique em Calcular.</div>
+            </div>
+            <div class="actions">
+                <button class="btn-print" onclick="salvarOrcamentoBD()">🚀 Enviar Pedido para Aprovação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔐 ABA 2: TELA DE LOGIN DA EMPRESA -->
+    <div id="section-login" class="system-section">
+        <div class="card" style="max-width: 450px; margin: 40px auto;">
+            <h2>🔐 Login de Funcionário / Admin</h2>
+            <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
+            <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
+            <button onclick="login()">Entrar no Painel Administrativo</button>
+        </div>
+    </div>
+
+    <!-- 📥 ABA 3: PEDIDOS RECEBIDOS -->
+    <div id="section-pedidos" class="system-section">
+        <div class="card panel-card">
+            <h2>📥 Orçamentos e Pedidos Enviados por Clientes <span class="count-note" id="pedidos-count"></span></h2>
+
+            <!-- Filtros por período, status e busca -->
+            <div class="filter-bar">
+                <div class="filter-field">
+                    <label>De (data inicial)</label>
+                    <input type="date" id="filtro-pedidos-inicio">
+                </div>
+                <div class="filter-field">
+                    <label>Até (data final)</label>
+                    <input type="date" id="filtro-pedidos-fim">
+                </div>
+                <div class="filter-field">
+                    <label>Status de acompanhamento</label>
+                    <select id="filtro-pedidos-status">
+                        <option value="todos">Todos os status</option>
+                        <option value="recebido">Recebido</option>
+                        <option value="andamento">Em Andamento</option>
+                        <option value="finalizado">Finalizado</option>
+                    </select>
+                </div>
+                <div class="filter-field" style="flex: 1.4;">
+                    <label>Buscar cliente ou WhatsApp</label>
+                    <input type="text" id="filtro-pedidos-busca" placeholder="Digite para filtrar...">
+                </div>
+                <button class="btn-clear" onclick="limparFiltrosPedidos()">Limpar</button>
+            </div>
+
+            <div style="overflow-x: auto;">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="sortable" onclick="alternarOrdenacaoPedidosData()">Data ↕</th>
-                            <th>Cliente / WhatsApp</th>
-                            <th>Serviço Solicitado</th>
-                            <th>Dimensões</th>
-                            <th>Qtd</th>
-                            <th>Valor Calculado</th>
-                            <th>Status do Andamento</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="listaPedidosCorpo">
-                        <!-- Alimentado via JS -->
-                    </tbody>
+                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Acompanhamento do Pedido</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-orcamentos"></tbody>
                 </table>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- SEÇÃO: FILTRO E RELATÓRIOS GERENCIAIS -->
-        <section class="card" style="border-left: 5px solid var(--primary);">
-            <h2>📈 Relatórios Gerenciais por Data de Serviços</h2>
-            <p style="font-size: 13px; color: #5f6368; margin-top: -15px; margin-bottom: 20px;">
-                Filtre os dados por período corporativo. Por padrão do sistema, as buscas consolidam as etapas de <strong>"Serviço Aprovado"</strong> e <strong>"Serviço em Andamento"</strong>.
-            </p>
-            
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-                <div style="flex: 1; min-width: 150px;" class="form-group">
-                    <label>Data Inicial</label>
-                    <input type="date" id="repDataInicio" class="form-control">
+    <!-- 🛠️ ABA 4: CONFIGURAÇÃO DE SERVIÇOS -->
+    <div id="section-servicos" class="system-section">
+        <div class="card">
+            <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
+            <div class="row">
+                <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
+                <div class="form-group">
+                    <label>Tipo de Cálculo</label>
+                    <select id="s-tipo"><option value="m2">Por Metro Quadrado (M²)</option><option value="unidade">Por Unidade Fixa</option></select>
                 </div>
-                <div style="flex: 1; min-width: 150px;" class="form-group">
-                    <label>Data Final</label>
-                    <input type="date" id="repDataFim" class="form-control">
+            </div>
+            <div class="form-group"><label>Preço Base de Venda (R$)</label><input type="number" id="s-preco" step="0.01"></div>
+            <button onclick="cadastrarServico()">Salvar na Tabela de Preços</button>
+        </div>
+        <div class="card">
+            <h2>📋 Tabela de Preços Atual (Visível para os clientes)</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-servicos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📈 ABA 5: RELATÓRIOS -->
+    <div id="section-relatorios" class="system-section">
+        <div class="card panel-card">
+            <h2>📈 Desempenho e Caixa da Gráfica</h2>
+
+            <!-- Filtro de relatório por intervalo de datas -->
+            <div class="filter-bar">
+                <div class="filter-field">
+                    <label>De (data inicial)</label>
+                    <input type="date" id="filtro-relatorio-inicio">
                 </div>
-                <div style="flex: 1; min-width: 200px;" class="form-group">
-                    <label>Filtro de Fases</label>
-                    <select id="repStatusFiltro" class="form-control">
-                        <option value="Aprovado_Andamento">Serviço Aprovado + Em Andamento</option>
-                        <option value="Todos">Todos os Status (Visão Geral)</option>
-                        <option value="Pendente">Apenas Orçamentos Pendentes</option>
-                        <option value="Aprovado">Apenas Serviços Aprovados</option>
-                        <option value="Em Andamento">Apenas Serviços em Andamento</option>
-                        <option value="Entregue">Apenas Serviços Entregues</option>
+                <div class="filter-field">
+                    <label>Até (data final)</label>
+                    <input type="date" id="filtro-relatorio-fim">
+                </div>
+                <div class="filter-field">
+                    <label>Status</label>
+                    <select id="filtro-relatorio-status">
+                        <option value="todos">Todos os status</option>
+                        <option value="recebido">Recebido</option>
+                        <option value="andamento">Em Andamento</option>
+                        <option value="finalizado">Finalizado</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <button onclick="gerarRelatorioFiltrado()" class="btn btn-primary" style="height: 40px; padding: 0 25px;">Filtrar Demandas</button>
-                </div>
+                <button class="btn-filter" onclick="aplicarFiltroRelatorio()">Gerar Relatório</button>
+                <button class="btn-clear" onclick="limparFiltroRelatorio()">Limpar</button>
+                <button class="btn-clear btn-print-report" onclick="window.print()" style="border-color:#c9bfa4;">🖨️ Imprimir</button>
             </div>
 
-            <div class="dash-container">
-                <div class="dash-card highlight-blue">
-                    <h4>Volume Filtrado no Período</h4>
-                    <p id="repVolume">0</p>
-                </div>
-                <div class="dash-card highlight-green">
-                    <h4>Faturamento Bruto Consolidado</h4>
-                    <p id="repFaturamento">R$ 0,00</p>
-                </div>
+            <p class="count-note" id="rep-periodo-desc" style="margin-bottom:16px;">Exibindo todo o histórico de pedidos.</p>
+
+            <div class="report-grid">
+                <div class="report-box"><h3>Faturamento Bruto</h3><p id="rep-faturamento">R$ 0,00</p></div>
+                <div class="report-box"><h3>Volume de Pedidos</h3><p id="rep-pedidos">0</p></div>
+                <div class="report-box"><h3>Ticket Médio</h3><p id="rep-ticket">R$ 0,00</p></div>
             </div>
-        </section>
 
-        <div class="grid-2">
-            <!-- SEÇÃO: CADASTRO DE PREÇOS -->
-            <section class="card">
-                <h2>🛠 Cadastrar Novo Serviço ou Mudar Preços</h2>
-                <form onsubmit="event.preventDefault(); adicionarNovoServicoPreco();">
-                    <div class="form-group">
-                        <label for="pNome">Nome do Serviço (Ex: Banner em Lona)</label>
-                        <input type="text" id="pNome" class="form-control" required placeholder="Ex: Banner em Lona de Alta Definição">
-                    </div>
-                    <div class="form-group">
-                        <label for="pTipo">Tipo de Cálculo</label>
-                        <select id="pTipo" class="form-control">
-                            <option value="m2">Por Metro Quadrado (M²)</option>
-                            <option value="fixo">Por Unidade Fixa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="pPreco">Preço Base de Venda (R$)</label>
-                        <input type="number" id="pPreco" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
-                    </div>
-                    <button type="submit" class="btn btn-success" style="width: 100%;">Salvar na Tabela de Preços</button>
-                </form>
-            </section>
+            <!-- Totais por status -->
+            <div class="report-grid">
+                <div class="report-box"><h3>📥 Recebidos</h3><p id="rep-qtd-recebido">0</p><span class="count-note" id="rep-val-recebido">R$ 0,00</span></div>
+                <div class="report-box"><h3>⏳ Em Andamento</h3><p id="rep-qtd-andamento">0</p><span class="count-note" id="rep-val-andamento">R$ 0,00</span></div>
+                <div class="report-box"><h3>✅ Finalizados</h3><p id="rep-qtd-finalizado">0</p><span class="count-note" id="rep-val-finalizado">R$ 0,00</span></div>
+            </div>
 
-            <!-- SEÇÃO: TABELA DE PREÇOS ATUAL -->
-            <section class="card">
-                <h2>📋 Tabela de Preços Atual (Visível para os clientes)</h2>
-                <div class="table-responsive" style="max-height: 290px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Serviço/Produto</th>
-                                <th>Forma de Cobrança</th>
-                                <th>Preço Base</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaPrecosCorpo">
-                            <!-- Alimentado via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <!-- Detalhamento dos pedidos do período -->
+            <h2 style="margin-top: 26px;">🧾 Detalhamento dos Pedidos no Período</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Status Atual</th><th>Recebido em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
+                    <tbody id="lista-relatorio"></tbody>
+                </table>
+            </div>
         </div>
-
-        <!-- SEÇÃO: DESEMPENHO E CAIXA HISTÓRICO GERAL -->
-        <section class="card">
-            <h2>📈 Desempenho e Caixa Geral Histórico da Gráfica</h2>
-            <div class="dash-container">
-                <div class="dash-card">
-                    <h4>Faturamento Bruto Total acumulado</h4>
-                    <p id="geralFaturamento">R$ 0,00</p>
-                </div>
-                <div class="dash-card">
-                    <h4>Volume Total de Demandas</h4>
-                    <p id="geralVolume">0</p>
-                </div>
-                <div class="dash-card">
-                    <h4>Ticket Médio Praticado</h4>
-                    <p id="geralTicket">R$ 0,00</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    </div>
 </div>
 
-<!-- ================= ENGENHARIA DE LOGICA (JAVASCRIPT) ================= -->
-<script>
-    /* --- ESTRUTURA DE BANCO DE DADOS LOCAL (LOCALSTORAGE) --- */
-    let bancoPrecos = JSON.parse(localStorage.getItem('gf_precos')) || [
-        { id: 1, nome: "Banner em Lona", tipo: "m2", preco: 45.00 },
-        { id: 2, nome: "Adesivo Vinil Perfurado", tipo: "m2", preco: 38.00 },
-        { id: 3, nome: "Panfletos 10x14cm (Milheiro)", tipo: "fixo", preco: 150.00 }
-    ];
+<!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let bancoPedidos = JSON.parse(localStorage.getItem('gf_pedidos')) || [];
-    let pedidoRascunho = null;
-    let ordemDataCrescente = false;
-
-    window.onload = function() {
-        atualizarMenuSelecaoProdutos();
-        renderizarTabelaPrecos();
-        renderizarTabelaPedidos();
-        configurarDatasPadraoRelatorios();
-        recalcularMetricasGeraisCaixa();
+    // CONFIGURAÇÕES DO FIREBASE CONECTADAS (inalteradas)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDB9WA3vYMW0IlwF0Fo8Aa9GhR0z6bAk6U",
+        authDomain: "portal-grafica-pro.firebaseapp.com",
+        projectId: "portal-grafica-pro",
+        storageBucket: "portal-grafica-pro.firebasestorage.app",
+        messagingSenderId: "410825484242",
+        appId: "1:410825484242:web:77114cb5a893cb20b94a0b"
     };
 
-    function mudarTela(destino) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-view'));
-        document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        if(destino === 'cliente') {
-            document.getElementById('telaCliente').classList.add('active-view');
-            document.getElementById('btnViewCliente').classList.add('active');
-        } else if(destino === 'login') {
-            document.getElementById('telaLogin').classList.add('active-view');
-            document.getElementById('btnViewRestrita').classList.add('active');
-        } else if(destino === 'restrita') {
-            document.getElementById('telaRestrita').classList.add('active-view');
-            document.getElementById('btnViewRestrita').classList.add('active');
-        }
+    let cacheServicos = {};
+    let orcamentoAtual = null;
+    let base64LogoData = "";
+    let cachePedidos = []; // cache local dos pedidos para filtros e relatórios
+
+    // ===== Constantes e utilitários de acompanhamento =====
+    const STATUS_ORDEM = ['recebido', 'andamento', 'finalizado'];
+    const STATUS_ROTULO = { recebido: 'Recebido', andamento: 'Em Andamento', finalizado: 'Finalizado' };
+
+    function statusDoPedido(item) {
+        // Pedidos antigos (sem o campo status) são tratados como "recebido" — sem alterar o documento original
+        return STATUS_ORDEM.includes(item.status) ? item.status : 'recebido';
     }
 
-    function executingAuthentication() {
-        const email = document.getElementById('loginEmail').value;
-        const senha = document.getElementById('loginSenha').value;
+    function formatarDataHora(ts) {
+        if (!ts) return '—';
+        return new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
 
-        if(email === 'admin@grafica.com' && senha === '123456') {
-            mudarTela('restrita');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginSenha').value = '';
+    function historicoDoPedido(item) {
+        // Lê o histórico gravado no documento; se não existir, infere o recebimento pelo timestamp original
+        if (Array.isArray(item.historicoStatus) && item.historicoStatus.length > 0) return item.historicoStatus;
+        return [{ status: 'recebido', timestamp: item.timestamp || Date.now() }];
+    }
+
+    function timestampDoStatus(item, status) {
+        const reg = historicoDoPedido(item).find(h => h.status === status);
+        return reg ? reg.timestamp : null;
+    }
+
+    function dentroDoPeriodo(item, inicioId, fimId) {
+        const ini = document.getElementById(inicioId).value;
+        const fim = document.getElementById(fimId).value;
+        const ts = item.timestamp || 0;
+        if (ini) {
+            const tsIni = new Date(ini + 'T00:00:00').getTime();
+            if (ts < tsIni) return false;
+        }
+        if (fim) {
+            const tsFim = new Date(fim + 'T23:59:59').getTime();
+            if (ts > tsFim) return false;
+        }
+        return true;
+    }
+
+    // --- AUTENTICAÇÃO INTERNA (inalterada) ---
+    window.login = function() {
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
+        if(!email || !senha) { alert("Preencha o e-mail e senha."); return; }
+
+        signInWithEmailAndPassword(auth, email, senha)
+            .then(() => {
+                alert("Acesso autorizado!");
+                switchTab('pedidos');
+            })
+            .catch(e => alert("Acesso negado: dados incorretos ou erro de conexão."));
+    }
+
+    window.logoutProcess = function() {
+        signOut(auth).then(() => {
+            alert("Sessão encerrada!");
+        });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        const loginBtn = document.getElementById('tab-login-btn');
+        const statusArea = document.getElementById('auth-status-area');
+
+        if (user) {
+            loginBtn.style.display = 'none';
+            document.getElementById('tab-pedidos-btn').style.display = 'block';
+            document.getElementById('tab-servicos-btn').style.display = 'block';
+            document.getElementById('tab-relatorios-btn').style.display = 'block';
+            statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
         } else {
-            alert('Credenciais corporativas incorretas! Use email: admin@grafica.com e senha: 123456');
+            loginBtn.style.display = 'block';
+            document.getElementById('tab-pedidos-btn').style.display = 'none';
+            document.getElementById('tab-servicos-btn').style.display = 'none';
+            document.getElementById('tab-relatorios-btn').style.display = 'none';
+            statusArea.innerHTML = `<span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>`;
+            switchTab('cliente-portal');
+        }
+    });
+
+    // --- NAVEGAÇÃO DE ABAS (inalterada) ---
+    window.switchTab = function(tab) {
+        document.getElementById('section-cliente-portal').style.removeProperty('display');
+        document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
+
+        if (tab === 'cliente-portal') {
+            document.getElementById('section-cliente-portal').style.display = 'contents';
+        } else {
+            document.getElementById('section-cliente-portal').style.display = 'none';
+            document.getElementById('section-' + tab).style.display = 'block';
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${tab}-btn`).classList.add('active');
+    }
+
+    // --- CONVERSÃO E PREVIEW DO LOGO (inalterada) ---
+    window.previewLogoUpload = function(input) {
+        const file = input.files;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64LogoData = e.target.result;
+                const imgEl = document.getElementById('logo-preview-element');
+                imgEl.src = base64LogoData;
+                imgEl.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
         }
     }
 
-    function atualizarMenuSelecaoProdutos() {
-        const select = document.getElementById('cServico');
-        select.innerHTML = '';
-        bancoPrecos.forEach(prod => {
+    // --- SERVIÇOS: LISTAGEM EM TEMPO REAL (inalterada) ---
+    onSnapshot(collection(db, "servicos"), (snap) => {
+        const select = document.getElementById('venda-servico');
+        const lista = document.getElementById('lista-servicos');
+
+        select.innerHTML = '<option value="">-- Selecione o Produto Desejado --</option>';
+        lista.innerHTML = "";
+        cacheServicos = {};
+
+        snap.forEach(d => {
+            const s = d.data();
+            cacheServicos[d.id] = s;
+
             const opt = document.createElement('option');
-            opt.value = prod.id;
-            opt.innerText = `${prod.nome} (${prod.tipo === 'm2' ? 'R$ ' + prod.preco.toFixed(2) + '/m²' : 'R$ ' + prod.preco.toFixed(2) + ' Fixo'})`;
+            opt.value = d.id;
+            opt.textContent = s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
             select.appendChild(opt);
-        });
-        verificarCamposDimensoes();
-    }
 
-    function verificarCamposDimensoes() {
-        const select = document.getElementById('cServico');
-        const boxDimensoes = document.getElementById('boxDimensoes');
-        
-        if(!select.value) return;
-        
-        const itemSelecionado = bancoPrecos.find(p => p.id == select.value);
-        if(itemSelecionado && itemSelecionado.tipo === 'fixo') {
-            boxDimensoes.style.display = 'none';
-        } else {
-            boxDimensoes.style.display = 'grid';
-        }
-    }
-
-    function processarOrcamentoProvisorio() {
-        const nome = document.getElementById('cNome').value;
-        const whats = document.getElementById('cWhats').value;
-        const produtoId = document.getElementById('cServico').value;
-        const qtd = parseInt(document.getElementById('cQtd').value);
-
-        const produto = bancoPrecos.find(p => p.id == produtoId);
-        if(!produto) return;
-
-        let valorBaseCalculado = produto.preco;
-        let dimensoesTexto = "Unidade Fixa";
-
-        if(produto.tipo === 'm2') {
-            const largura = parseFloat(document.getElementById('cLargura').value);
-            const altura = parseFloat(document.getElementById('cAltura').value);
-            valorBaseCalculado = (largura * altura) * produto.preco;
-            dimensoesTexto = `${largura.toFixed(2)} x ${altura.toFixed(2)} m`;
-        }
-
-        let adicionaisSoma = 0;
-        if(document.getElementById('acab1').checked) adicionaisSoma += parseFloat(document.getElementById('acab1').value);
-        if(document.getElementById('acab2').checked) adicionaisSoma += parseFloat(document.getElementById('acab2').value);
-        if(document.getElementById('acab3').checked) adicionaisSoma += parseFloat(document.getElementById('acab3').value);
-
-        const valorTotalFinal = (valorBaseCalculado * qtd) + adicionaisSoma;
-
-        pedidoRascunho = {
-            id: Date.now(),
-            data: new Date().toISOString(),
-            cliente: nome,
-            whatsapp: whats,
-            servico: produto.nome,
-            dimensoes: dimensoesTexto,
-            quantidade: qtd,
-            valor: valorTotalFinal,
-            status: "Pendente"
-        };
-
-        document.getElementById('wrapperResumo').innerHTML = `
-            <div style="width:100%; color:#202124;">
-                <p><strong>Cliente:</strong> ${pedidoRascunho.cliente}</p>
-                <p><strong>Serviço:</strong> ${pedidoRascunho.servico}</p>
-                <p><strong>Configuração:</strong> ${pedidoRascunho.dimensoes} (Qtd: ${pedidoRascunho.quantidade})</p>
-                <p style="margin-top:10px; font-size:18px; color:var(--success); font-weight:bold;">
-                    Valor Estimado: R$ ${valorTotalFinal.toFixed(2)}
-                </p>
-            </div>
-        `;
-        document.getElementById('boxAcaoEnvio').style.display = 'block';
-    }
-
-    function enviarPedidoAdministracao() {
-        if(!pedidoRascunho) return;
-
-        bancoPedidos.push(pedidoRascunho);
-        localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
-        
-        alert('Orçamento enviado com sucesso! Aguarde o contato da empresa no WhatsApp.');
-        
-        pedidoRascunho = null;
-        document.getElementById('formOrcamento').reset();
-        document.getElementById('wrapperResumo').innerText = "Preencha os campos ao lado e clique em Calcular para visualizar os valores.";
-        document.getElementById('boxAcaoEnvio').style.display = 'none';
-        verificarCamposDimensoes();
-
-        renderizarTabelaPedidos();
-        recalcularMetricasGeraisCaixa();
-    }
-
-    function obterClasseVisualStatus(status) {
-        if(status === 'Aprovado') return 'status-aprovado';
-        if(status === 'Em Andamento') return 'status-andamento';
-        if(status === 'Entregue') return 'status-entregue';
-        return 'status-pendente';
-    }
-
-    function alternarOrdenacaoPedidosData() {
-        ordemDataCrescente = !ordemDataCrescente;
-        bancoPedidos.sort((a,b) => {
-            return ordemDataCrescente ? new Date(a.data) - new Date(b.data) : new Date(b.data) - new Date(a.data);
-        });
-        renderizarTabelaPedidos();
-    }
-
-    function atualizarMudarStatusPedido(idPedido, novoStatus, elementoSelect) {
-        elementoSelect.className = `status-select ${obterClasseVisualStatus(novoStatus)}`;
-        
-        const pedido = bancoPedidos.find(p => p.id == idPedido);
-        if(pedido) {
-            pedido.status = novoStatus;
-            localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
-            recalcularMetricasGeraisCaixa();
-        }
-    }
-
-    function deletarRegistroPedido(idPedido) {
-        if(confirm("Deseja deletar este pedido permanentemente do sistema?")) {
-            bancoPedidos = bancoPedidos.filter(p => p.id != idPedido);
-            localStorage.setItem('gf_pedidos', JSON.stringify(bancoPedidos));
-            renderizarTabelaPedidos();
-            recalcularMetricasGeraisCaixa();
-        }
-    }
-
-    function renderizarTabelaPedidos(dadosExibicao = bancoPedidos) {
-        const corpo = document.getElementById('listaPedidosCorpo');
-        corpo.innerHTML = '';
-
-        if(dadosExibicao.length === 0) {
-            corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#999;">Nenhum registro encontrado.</td></tr>`;
-            return;
-        }
-
-        dadosExibicao.forEach(p => {
             const tr = document.createElement('tr');
-            const dataObjeto = new Date(p.data);
-            const dataBr = dataObjeto.toLocaleDateString('pt-BR') + ' ' + dataObjeto.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            const cls = obterClasseVisualStatus(p.status);
 
-            tr.innerHTML = `
-                <td><strong>${dataBr}</strong></td>
-                <td>${p.cliente}<br><small style="color:#666;">${p.whatsapp}</small></td>
-                <td>${p.servico}</td>
-                <td>${p.dimensoes}</td>
-                <td>${p.quantidade}</td>
-                <td><strong>R$ ${p.valor.toFixed(2)}</strong></td>
-                <td>
-                    <select class="status-select ${cls}" onchange="atualizarMudarStatusPedido(${p.id}, this.value, this)">
-                        <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Orçamento Pendente</option>
-                        <option value="Aprovado" ${p.status === 'Aprovado' ? 'selected' : ''}>Serviço Aprovado</option>
-                        <option value="Em Andamento" ${p.status === 'Em Andamento' ? 'selected' : ''}>Serviço em Andamento</option>
-                        <option value="Entregue" ${p.status === 'Entregue' ? 'selected' : ''}>Serviço Entregue</option>
-                    </select>
-                </td>
-                <td>
-                    <button onclick="deletarRegistroPedido(${p.id})" class="btn btn-danger">Excluir</button>
-                </td>
-            `;
-            corpo.appendChild(tr);
+            const tdNome = document.createElement('td');
+            tdNome.style.fontWeight = 'bold';
+            tdNome.textContent = s.nome;
+
+            const tdTipo = document.createElement('td');
+            const spanBadge = document.createElement('span');
+            spanBadge.className = 'badge';
+            spanBadge.textContent = s.tipo.toUpperCase();
+            tdTipo.appendChild(spanBadge);
+
+            const tdPreco = document.createElement('td');
+            tdPreco.textContent = "R$ " + s.preco.toFixed(2);
+
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Excluir';
+            btnDel.onclick = function() { deletarBD('servicos', d.id); };
+            tdAcoes.appendChild(btnDel);
+
+            tr.appendChild(tdNome);
+            tr.appendChild(tdTipo);
+            tr.appendChild(tdPreco);
+            tr.appendChild(tdAcoes);
+
+            lista.appendChild(tr);
+        });
+    });
+
+    // ===== Atualização de status com registro de data/hora =====
+    window.atualizarStatusPedido = async function(id, novoStatus) {
+        const pedido = cachePedidos.find(p => p.id === id);
+        if (!pedido) return;
+
+        const statusAtual = statusDoPedido(pedido);
+        if (novoStatus === statusAtual) return; // sem alteração
+
+        const idxNovo = STATUS_ORDEM.indexOf(novoStatus);
+        const idxAtual = STATUS_ORDEM.indexOf(statusAtual);
+
+        // Monta o histórico preservando o que já existe no documento
+        let historico = historicoDoPedido(pedido).slice();
+
+        if (idxNovo > idxAtual) {
+            // Avanço: registra data/hora de todas as etapas até o novo status (inclusive)
+            for (let i = idxAtual + 1; i <= idxNovo; i++) {
+                if (!historico.some(h => h.status === STATUS_ORDEM[i])) {
+                    historico.push({ status: STATUS_ORDEM[i], timestamp: Date.now() });
+                }
+            }
+        } else {
+            // Retorno a etapa anterior: remove registros das etapas posteriores
+            historico = historico.filter(h => STATUS_ORDEM.indexOf(h.status) <= idxNovo);
+        }
+
+        try {
+            await updateDoc(doc(db, "vendas", id), { status: novoStatus, historicoStatus: historico });
+        } catch (e) {
+            alert("Não foi possível atualizar o status. Verifique sua conexão.");
+        }
+    }
+
+    window.toggleHistorico = function(el) {
+        const lista = el.parentElement.querySelector('.history-list');
+        if (lista) lista.classList.toggle('open');
+    }
+
+    // ===== Renderização do checklist de acompanhamento =====
+    function montarChecklist(item) {
+        const wrap = document.createElement('div');
+        wrap.className = 'status-checklist';
+        const statusAtual = statusDoPedido(item);
+        const idxAtual = STATUS_ORDEM.indexOf(statusAtual);
+
+        STATUS_ORDEM.forEach((st, i) => {
+            const label = document.createElement('label');
+            label.className = 'status-step' + (i < idxAtual ? ' done' : '') + (i === idxAtual ? ' current' : '');
+
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.checked = i <= idxAtual;
+            chk.onchange = function() { atualizarStatusPedido(item.id, st); };
+
+            const textWrap = document.createElement('span');
+            textWrap.className = 'step-label';
+            textWrap.textContent = STATUS_ROTULO[st];
+
+            const ts = timestampDoStatus(item, st);
+            const time = document.createElement('span');
+            time.className = 'step-time';
+            time.textContent = ts ? formatarDataHora(ts) : 'aguardando';
+            textWrap.appendChild(time);
+
+            label.appendChild(chk);
+            label.appendChild(textWrap);
+            wrap.appendChild(label);
+        });
+
+        const btnHist = document.createElement('button');
+        btnHist.className = 'history-toggle';
+        btnHist.textContent = '▼ Ver histórico completo';
+        btnHist.onclick = function() { toggleHistorico(this); };
+        wrap.appendChild(btnHist);
+
+        const ul = document.createElement('ul');
+        ul.className = 'history-list';
+        historicoDoPedido(item).slice().sort((a,b) => a.timestamp - b.timestamp).forEach(h => {
+            const li = document.createElement('li');
+            const st = document.createElement('span');
+            st.className = 'h-status';
+            st.textContent = (STATUS_ROTULO[h.status] || h.status) + ': ';
+            li.appendChild(st);
+            li.appendChild(document.createTextNode(formatarDataHora(h.timestamp)));
+            ul.appendChild(li);
+        });
+        wrap.appendChild(ul);
+
+        return wrap;
+    }
+
+    // ===== Filtros da guia Pedidos Recebidos =====
+    window.limparFiltrosPedidos = function() {
+        document.getElementById('filtro-pedidos-inicio').value = '';
+        document.getElementById('filtro-pedidos-fim').value = '';
+        document.getElementById('filtro-pedidos-status').value = 'todos';
+        document.getElementById('filtro-pedidos-busca').value = '';
+        renderizarPedidos();
+    }
+    ;['filtro-pedidos-inicio','filtro-pedidos-fim','filtro-pedidos-status'].forEach(id => {
+        document.getElementById(id).addEventListener('change', renderizarPedidos);
+    });
+    document.getElementById('filtro-pedidos-busca').addEventListener('input', renderizarPedidos);
+
+    function pedidosFiltrados() {
+        const statusFiltro = document.getElementById('filtro-pedidos-status').value;
+        const busca = document.getElementById('filtro-pedidos-busca').value.trim().toLowerCase();
+
+        return cachePedidos.filter(item => {
+            if (!dentroDoPeriodo(item, 'filtro-pedidos-inicio', 'filtro-pedidos-fim')) return false;
+            if (statusFiltro !== 'todos' && statusDoPedido(item) !== statusFiltro) return false;
+            if (busca) {
+                const alvo = ((item.cliente || '') + ' ' + (item.telefone || '')).toLowerCase();
+                if (!alvo.includes(busca)) return false;
+            }
+            return true;
         });
     }
 
-    function configurarDatasPadraoRelatorios() {
-        const hojeStr = new Date().toISOString().split('T')[0];
-        document.getElementById('repDataInicio').value = hojeStr;
-        document.getElementById('repDataFim').value = hojeStr;
-    }
+    function renderizarPedidos() {
+        const tbody = document.getElementById('lista-orcamentos');
+        tbody.innerHTML = "";
 
-    function gerarRelatorioFiltrado() {
-        const dInicioStr = document.getElementById('repDataInicio').value;
-        const dFimStr = document.getElementById('repDataFim').value;
-        const tipoFiltro = document.getElementById('repStatusFiltro').value;
+        const lista = pedidosFiltrados();
+        document.getElementById('pedidos-count').textContent = `(${lista.length} de ${cachePedidos.length} pedidos)`;
 
-        if(!dInicioStr || !dFimStr) {
-            alert('Determine os períodos inicial e final para filtrar.');
+        if (lista.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 9;
+            td.innerHTML = '<div class="empty-state">Nenhum pedido encontrado para os filtros selecionados.</div>';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
             return;
         }
 
-        const dataLimiteInicio = new Date(dInicioStr + "T00:00:00");
-        const dataLimiteFim = new Date(dFimStr + "T23:59:59");
+        lista.forEach(item => {
+            const tr = document.createElement('tr');
 
-        const filtrados = bancoPedidos.filter(p => {
-            const pData = new Date(p.data);
-            const dentroDoPeriodo = (pData >= dataLimiteInicio && pData <= dataLimiteFim);
-            
-            let condicaoStatus = true;
-            if (tipoFiltro === 'Aprovado_Andamento') {
-                condicaoStatus = (p.status === 'Aprovado' || p.status === 'Em Andamento');
-            } else if (tipoFiltro !== 'Todos') {
-                condicaoStatus = (p.status === tipoFiltro);
+            const tdData = document.createElement('td');
+            tdData.textContent = item.data;
+
+            const tdCliente = document.createElement('td');
+            tdCliente.innerHTML = "<strong>" + item.cliente + "</strong><br><small>" + item.telefone + "</small>";
+
+            const tdServico = document.createElement('td');
+            tdServico.textContent = item.servico;
+
+            const tdMedidas = document.createElement('td');
+            tdMedidas.innerHTML = "<small>" + item.medidas + "</small>";
+
+            const tdQtd = document.createElement('td');
+            tdQtd.textContent = item.qtd + "x";
+
+            const tdLogo = document.createElement('td');
+            if(item.logo) {
+                const img = document.createElement('img');
+                img.className = 'preview-logo';
+                img.style.display = 'block';
+                img.src = item.logo;
+                tdLogo.appendChild(img);
+            } else {
+                tdLogo.innerHTML = '<span style="color:#94a3b8">Sem arquivo</span>';
             }
 
-            return dentroDoPeriodo && condicaoStatus;
+            const tdTotal = document.createElement('td');
+            tdTotal.innerHTML = "<strong>R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + "</strong>";
+
+            // Coluna de acompanhamento com checklist + status atual
+            const tdStatus = document.createElement('td');
+            const pill = document.createElement('span');
+            const stAtual = statusDoPedido(item);
+            pill.className = 'status-pill ' + stAtual;
+            pill.textContent = STATUS_ROTULO[stAtual];
+            tdStatus.appendChild(pill);
+            tdStatus.appendChild(document.createElement('div')).style.height = '6px';
+            tdStatus.appendChild(montarChecklist(item));
+
+            const tdAcoes = document.createElement('td');
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-del';
+            btnDel.textContent = 'Remover';
+            btnDel.onclick = function() { deletarBD('vendas', item.id); };
+            tdAcoes.appendChild(btnDel);
+
+            tr.appendChild(tdData);
+            tr.appendChild(tdCliente);
+            tr.appendChild(tdServico);
+            tr.appendChild(tdMedidas);
+            tr.appendChild(tdQtd);
+            tr.appendChild(tdLogo);
+            tr.appendChild(tdTotal);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdAcoes);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ===== Relatório por intervalo de datas com totais e detalhamento =====
+    window.aplicarFiltroRelatorio = function() { renderizarRelatorio(); }
+    window.limparFiltroRelatorio = function() {
+        document.getElementById('filtro-relatorio-inicio').value = '';
+        document.getElementById('filtro-relatorio-fim').value = '';
+        document.getElementById('filtro-relatorio-status').value = 'todos';
+        renderizarRelatorio();
+    }
+
+    function renderizarRelatorio() {
+        const statusFiltro = document.getElementById('filtro-relatorio-status').value;
+        const ini = document.getElementById('filtro-relatorio-inicio').value;
+        const fim = document.getElementById('filtro-relatorio-fim').value;
+
+        const lista = cachePedidos.filter(item => {
+            if (!dentroDoPeriodo(item, 'filtro-relatorio-inicio', 'filtro-relatorio-fim')) return false;
+            if (statusFiltro !== 'todos' && statusDoPedido(item) !== statusFiltro) return false;
+            return true;
         });
 
-        const totalVolume = filtrados.length;
-        const totalFaturamento = filtrados.reduce((acc, obj) => acc + obj.valor, 0);
+        // Descrição do período exibido
+        const fmt = v => new Date(v + 'T00:00:00').toLocaleDateString('pt-BR');
+        let desc = 'Exibindo todo o histórico de pedidos.';
+        if (ini && fim) desc = `Período: ${fmt(ini)} até ${fmt(fim)}.`;
+        else if (ini) desc = `A partir de ${fmt(ini)}.`;
+        else if (fim) desc = `Até ${fmt(fim)}.`;
+        if (statusFiltro !== 'todos') desc += ` Somente pedidos com status "${STATUS_ROTULO[statusFiltro]}".`;
+        document.getElementById('rep-periodo-desc').textContent = desc;
 
-        document.getElementById('repVolume').innerText = totalVolume;
-        document.getElementById('repFaturamento').innerText = totalFaturamento.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
+        // Totais gerais do período
+        let totalFaturamento = 0;
+        const totais = { recebido: {qtd:0, val:0}, andamento: {qtd:0, val:0}, finalizado: {qtd:0, val:0} };
+        lista.forEach(item => {
+            totalFaturamento += item.total;
+            const st = statusDoPedido(item);
+            totais[st].qtd++;
+            totais[st].val += item.total;
+        });
+        const totalPedidos = lista.length;
 
-        renderizarTabelaPedidos(filtrados);
+        document.getElementById('rep-faturamento').innerText = `R$ ${totalFaturamento.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        document.getElementById('rep-pedidos').innerText = totalPedidos;
+        document.getElementById('rep-ticket').innerText = `R$ ${(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+
+        STATUS_ORDEM.forEach(st => {
+            document.getElementById('rep-qtd-' + st).innerText = totais[st].qtd;
+            document.getElementById('rep-val-' + st).innerText = `R$ ${totais[st].val.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        });
+
+        // Detalhamento linha a linha
+        const tbody = document.getElementById('lista-relatorio');
+        tbody.innerHTML = "";
+        if (lista.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 8;
+            td.innerHTML = '<div class="empty-state">Nenhum pedido no período selecionado.</div>';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        lista.forEach(item => {
+            const tr = document.createElement('tr');
+            const st = statusDoPedido(item);
+
+            const celulas = [
+                item.data,
+                item.cliente,
+                item.servico,
+                "R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2})
+            ];
+            celulas.forEach(txt => {
+                const td = document.createElement('td');
+                td.textContent = txt;
+                tr.appendChild(td);
+            });
+
+            const tdStatus = document.createElement('td');
+            const pill = document.createElement('span');
+            pill.className = 'status-pill ' + st;
+            pill.textContent = STATUS_ROTULO[st];
+            tdStatus.appendChild(pill);
+            tr.appendChild(tdStatus);
+
+            STATUS_ORDEM.forEach(s => {
+                const td = document.createElement('td');
+                td.innerHTML = '<small>' + formatarDataHora(timestampDoStatus(item, s)) + '</small>';
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
     }
 
-    function adicionarNovoServicoPreco() {
-        const nome = document.getElementById('pNome').value;
-        const tipo = document.getElementById('pTipo').value;
-        const preco = parseFloat(document.getElementById('pPreco').value);
+    // --- PEDIDOS: LISTAGEM EM TEMPO REAL (campos originais preservados) ---
+    onSnapshot(collection(db, "vendas"), (snap) => {
+        cachePedidos = [];
+        snap.forEach(d => { cachePedidos.push({id: d.id, ...d.data()}); });
+        cachePedidos.sort((a,b) => b.timestamp - a.timestamp);
+        renderizarPedidos();
+        renderizarRelatorio();
+    });
 
-        const novoItem = { id: Date.now(), nome, tipo, preco };
-        bancoPrecos.push(novoItem);
-        localStorage.setItem('gf_precos', JSON.stringify(bancoPrecos));
-
-        document.getElementById('pNome').value = '';
-        document.getElementById('pPreco').value = '';
-
-        renderizarTabelaPrecos();
-        atualizarMenuSelecaoProdutos();
+    // --- OPERAÇÕES DE CADASTRO (inalteradas) ---
+    window.cadastrarServico = async function() {
+        const nome = document.getElementById('s-nome').value;
+        const tipo = document.getElementById('s-tipo').value;
+        const preco = parseFloat(document.getElementById('s-preco').value);
+        if(!nome || isNaN(preco)) { alert("Preencha todos os campos do serviço."); return; }
+        await addDoc(collection(db, "servicos"), { nome, tipo, preco });
+        alert("Serviço adicionado ao catálogo público!");
+        document.getElementById('s-nome').value = "";
+        document.getElementById('s-preco').value = "";
     }
 
-    function deletarItemPreco(idPreco) {
-        if(confirm("Deseja remover este item da tabela de preços pública?")) {
-            bancoPrecos = bancoPrecos.filter(p => p.id != idPreco);
-            localStorage.setItem('gf_precos', JSON.stringify(bancoPrecos));
-            renderizarTabelaPrecos();
-            atualizarMenuSelecaoProdutos();
+    window.deletarBD = async function(colecao, id) {
+        if(confirm("Deseja mesmo remover esse registro do sistema?")) {
+            await deleteDoc(doc(db, colecao, id));
         }
     }
 
-    function renderizarTabelaPrecos() {
-        const corpo = document.getElementById('listaPrecosCorpo');
-        corpo.innerHTML = '';
+    // --- CÁLCULO DE ORÇAMENTOS (inalterado) ---
+    document.getElementById('venda-servico').addEventListener('change', function() {
+        const s = cacheServicos[this.value];
+        document.getElementById('dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
+    });
 
-        bancoPrecos.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${p.nome}</td>
-                <td><small>${p.tipo === 'm2' ? 'Por Metro Quadrado (M²)' : 'Unidade Fixa'}</small></td>
-                <td><strong>R$ ${p.preco.toFixed(2)}</strong></td>
-                <td>
-                    <button onclick="deletarItemPreco(${p.id})" class="btn btn-danger" style="padding:4px 8px;">Remover</button>
-                </td>
-            `;
-            corpo.appendChild(tr);
+    window.gerarOrcamento = function() {
+        const clienteNome = document.getElementById('venda-cliente').value;
+        const clienteTel = document.getElementById('venda-tel').value;
+        const servicoId = document.getElementById('venda-servico').value;
+        const quantidade = parseInt(document.getElementById('quantidade').value);
+
+        if(!clienteNome || !clienteTel || !servicoId) { alert("Por favor, preencha seus dados de contato e o serviço."); return; }
+
+        const servico = cacheServicos[servicoId];
+        let totalCusto = 0, dimensionStr = "";
+
+        if(servico.tipo === 'm2') {
+            const larg = parseFloat(document.getElementById('largura').value) || 1;
+            const alt = parseFloat(document.getElementById('altura').value) || 1;
+            totalCusto = (larg * alt) * servico.preco * quantidade;
+            dimensionStr = `${larg.toFixed(2)}m x ${alt.toFixed(2)}m (${(larg*alt).toFixed(2)}m²)`;
+        } else {
+            totalCusto = servico.preco * quantidade;
+            dimensionStr = "Unidade Fixa";
+        }
+
+        let totalAdicionais = 0;
+        ;['acab_bastao','acab_ilhos','acab_instalacao'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el && el.checked) totalAdicionais += parseFloat(el.value);
         });
+
+        orcamentoAtual = {
+            data: new Date().toLocaleDateString('pt-BR'),
+            timestamp: Date.now(),
+            cliente: clienteNome,
+            telefone: clienteTel,
+            servico: servico.nome,
+            medidas: dimensionStr,
+            qtd: quantidade,
+            logo: base64LogoData,
+            total: totalCusto + totalAdicionais,
+            // Campos adicionais de acompanhamento (não substituem nenhum campo existente)
+            status: 'recebido',
+            historicoStatus: [{ status: 'recebido', timestamp: Date.now() }]
+        };
+
+        let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
+
+        document.getElementById('recibo-conteudo').innerHTML = `
+            <div class="receipt-header"><h3>Orçamento Gerado</h3><p>Prévia para Aprovação</p></div>
+            <div class="receipt-row"><strong>Nome:</strong> <span>${orcamentoAtual.cliente}</span></div>
+            <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
+            <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
+            <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
+            ${visualLogo}
+            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+        `;
     }
 
-    function recalcularMetricasGeraisCaixa() {
-        const volumeGeral = bancoPedidos.length;
-        const faturamentoGeral = bancoPedidos.reduce((acc, p) => acc + p.valor, 0);
-        const ticketMedio = volumeGeral > 0 ? (faturamentoGeral / volumeGeral) : 0;
-
-        document.getElementById('geralVolume').innerText = volumeGeral;
-        document.getElementById('geralFaturamento').innerText = faturamentoGeral.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
-        document.getElementById('geralTicket').innerText = ticketMedio.toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
+    window.salvarOrcamentoBD = async function() {
+        if(!orcamentoAtual) { alert("Por favor, preencha o formulário e clique em 'Calcular Valor' antes de enviar."); return; }
+        await addDoc(collection(db, "vendas"), orcamentoAtual);
+        alert("Sucesso! Seu orçamento foi enviado. Nossa equipe entrará em contato pelo WhatsApp fornecido.");
+        document.getElementById('orcamentoForm').reset();
+        document.getElementById('logo-preview-element').style.display = 'none';
+        document.getElementById('recibo-conteudo').innerHTML = `<div style="text-align:center;padding-top:50px;color:#94a3b8;">Preencha os campos ao lado e clique em Calcular.</div>`;
+        orcamentoAtual = null;
+        base64LogoData = "";
     }
 </script>
 </body>
