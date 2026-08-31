@@ -438,6 +438,17 @@
     <!-- 🛠️ ABA 5: CONFIGURAÇÃO DE SERVIÇOS (RESTRITA) -->
     <div id="section-servicos" class="system-section">
         <div class="card">
+            <h2>🧭 Guias do Portal (Ativação / Desativação)</h2>
+            <p class="count-note" style="margin-bottom:14px;">Marque ou desmarque as guias públicas abaixo. A alteração é salva no sistema e vale <strong>imediatamente</strong> para todos os visitantes do site.</p>
+            <div class="form-group">
+                <label class="checkbox-item" style="background:#faf8f2; padding:12px; border-radius:10px; border:1px solid var(--border);">
+                    <input type="checkbox" id="cfg-portal-ativo" checked onchange="alternarPortalCliente(this.checked)">
+                    <span>🌐 <strong>Portal do Cliente</strong> — exibir a guia de orçamentos para os visitantes</span>
+                </label>
+            </div>
+            <p class="count-note" id="cfg-portal-status">A guia Portal do Cliente está visível para todos.</p>
+        </div>
+        <div class="card">
             <h2>🏪 Identidade da Gráfica (Nome no Cabeçalho)</h2>
             <div class="form-group">
                 <label>Nome da Gráfica (exibido no topo do portal)</label>
@@ -479,18 +490,22 @@
         </div>
         <div class="card">
             <h2>✨ Cadastrar Acabamento Adicional</h2>
+            <div class="form-group">
+                <label>Vincular ao Serviço</label>
+                <select id="a-servico"><option value="">Carregando serviços...</option></select>
+            </div>
             <div class="row">
                 <div class="form-group"><label>Nome do Acabamento (Ex: Bastão e Cordão)</label><input type="text" id="a-nome" placeholder="Ex: Ilhós nas Bordas"></div>
                 <div class="form-group"><label>Valor Cobrado (R$)</label><input type="number" id="a-preco" step="0.01" min="0" placeholder="Ex: 10.00"></div>
             </div>
             <button onclick="cadastrarAcabamento()">Salvar Acabamento</button>
-            <p class="count-note" style="margin-top:10px;">Os acabamentos cadastrados aparecem automaticamente como opções de marcação no orçamento do cliente e entram no cálculo do valor.</p>
+            <p class="count-note" style="margin-top:10px;">Cada acabamento pertence a um serviço: ele só aparece como opção quando o serviço correspondente é escolhido, no portal do cliente e no PDV.</p>
         </div>
         <div class="card">
             <h2>🧩 Acabamentos Oferecidos aos Clientes</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Acabamento</th><th>Valor</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Acabamento</th><th>Serviço Vinculado</th><th>Valor</th><th>Ações</th></tr></thead>
                     <tbody id="lista-acabamentos"></tbody>
                 </table>
             </div>
@@ -626,6 +641,38 @@
         }
     }
 
+    // ===== ATIVAÇÃO/DESATIVAÇÃO DAS GUIAS PÚBLICAS (checklist da área restrita) =====
+    const VISIBILIDADE_DOC_REF = doc(db, "configuracoes", "visibilidade");
+    let portalClienteAtivo = true; // padrão: guia visível (usado também quando ainda não há configuração salva)
+
+    function aplicarVisibilidadeGuias() {
+        document.getElementById('tab-cliente-portal-btn').style.display = portalClienteAtivo ? 'block' : 'none';
+        const statusTxt = document.getElementById('cfg-portal-status');
+        if (statusTxt) statusTxt.textContent = portalClienteAtivo
+            ? 'A guia Portal do Cliente está visível para todos.'
+            : 'A guia Portal do Cliente está oculta — visitantes veem apenas o PDV e os Pedidos Recebidos.';
+        // Se a guia desativada estiver aberta no momento, redireciona para o PDV
+        if (!portalClienteAtivo && document.getElementById('section-cliente-portal').style.display !== 'none') {
+            switchTab('pdv');
+        }
+    }
+
+    // Escuta em tempo real: ativar/desativar reflete na hora para todos os visitantes
+    onSnapshot(VISIBILIDADE_DOC_REF, (snap) => {
+        portalClienteAtivo = snap.exists() ? snap.data().portalAtivo !== false : true;
+        const chk = document.getElementById('cfg-portal-ativo');
+        if (chk) chk.checked = portalClienteAtivo;
+        aplicarVisibilidadeGuias();
+    });
+
+    window.alternarPortalCliente = async function(ativo) {
+        try {
+            await setDoc(VISIBILIDADE_DOC_REF, { portalAtivo: ativo, atualizadoEm: Date.now() }, { merge: true });
+        } catch (e) {
+            alert("Não foi possível salvar a configuração. Verifique sua conexão.");
+        }
+    }
+
     // ===== Constantes e utilitários de acompanhamento =====
     const STATUS_ORDEM = ['recebido', 'andamento', 'finalizado'];
     const STATUS_ROTULO = { recebido: 'Recebido', andamento: 'Em Andamento', finalizado: 'Finalizado' };
@@ -724,6 +771,8 @@
 
     // --- NAVEGAÇÃO DE ABAS ---
     window.switchTab = function(tab) {
+        // Se a guia Portal do Cliente estiver desativada, qualquer navegação para ela é desviada ao PDV
+        if (tab === 'cliente-portal' && !portalClienteAtivo) tab = 'pdv';
         document.getElementById('section-cliente-portal').style.removeProperty('display');
         document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
 
@@ -846,6 +895,8 @@
 
         select.innerHTML = '<option value="">-- Selecione o Produto Desejado --</option>';
         selectPDV.innerHTML = '<option value="">-- Selecione o Serviço --</option>';
+        const selectAcab = document.getElementById('a-servico');
+        selectAcab.innerHTML = '<option value="">-- Vincular a qual serviço? --</option>';
         lista.innerHTML = "";
         cacheServicos = {};
 
@@ -866,6 +917,12 @@
             optPDV.value = d.id;
             optPDV.textContent = (s.interno ? '🔒 ' : '') + s.nome + " (" + (s.tipo === 'm2' ? 'Cobrado por M²' : 'Unidade Fixa') + ")";
             selectPDV.appendChild(optPDV);
+
+            // No cadastro de acabamentos: todos os serviços disponíveis para vínculo
+            const optAcab = document.createElement('option');
+            optAcab.value = d.id;
+            optAcab.textContent = (s.interno ? '🔒 ' : '') + s.nome;
+            selectAcab.appendChild(optAcab);
 
             const tr = document.createElement('tr');
 
@@ -914,76 +971,102 @@
     });
 
     // ===== ACABAMENTOS ADICIONAIS: CADASTRO E LISTAGEM EM TEMPO REAL =====
+    // Cada acabamento é vinculado a um serviço (subitem) e só aparece quando esse serviço é escolhido.
+    // Compatibilidade: acabamentos antigos (sem servicoId) continuam aparecendo para todos os serviços.
     let cacheAcabamentos = {};
 
-    onSnapshot(collection(db, "acabamentos"), (snap) => {
-        const container = document.getElementById('acabamentos-container');
-        const containerPDV = document.getElementById('pdv-acabamentos-container');
-        const lista = document.getElementById('lista-acabamentos');
-        container.innerHTML = "";
-        containerPDV.innerHTML = "";
-        lista.innerHTML = "";
-        cacheAcabamentos = {};
+    function acabamentosDoServico(servicoId) {
+        return Object.entries(cacheAcabamentos)
+            .filter(([id, a]) => !a.servicoId || a.servicoId === servicoId)
+            .map(([id, a]) => a);
+    }
 
-        if (snap.empty) {
-            container.innerHTML = '<div style="color:#94a3b8; font-size:13px;">Nenhum acabamento adicional disponível no momento.</div>';
-            containerPDV.innerHTML = '<div style="color:#94a3b8; font-size:13px;">Nenhum acabamento cadastrado.</div>';
-            const tr = document.createElement('tr');
-            const td = document.createElement('td');
-            td.colSpan = 3;
-            td.innerHTML = '<div class="empty-state">Nenhum acabamento cadastrado. Use o formulário acima para adicionar.</div>';
-            tr.appendChild(td);
-            lista.appendChild(tr);
+    function renderizarAcabamentosServico(servicoId, container, classeCheck) {
+        container.innerHTML = "";
+        if (!servicoId) {
+            container.innerHTML = '<div style="color:#94a3b8; font-size:13px;">Selecione o serviço acima para ver os acabamentos disponíveis.</div>';
             return;
         }
-
-        snap.forEach(d => {
-            const a = d.data();
-            cacheAcabamentos[d.id] = a;
+        const lista = acabamentosDoServico(servicoId);
+        if (lista.length === 0) {
+            container.innerHTML = '<div style="color:#94a3b8; font-size:13px;">Nenhum acabamento disponível para este serviço.</div>';
+            return;
+        }
+        lista.forEach(a => {
             const valorFmt = a.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-
-            // Checkbox no portal do cliente
             const lbl = document.createElement('label');
             lbl.className = 'checkbox-item';
             const chk = document.createElement('input');
             chk.type = 'checkbox';
-            chk.className = 'acabamento-check';
+            chk.className = classeCheck;
             chk.value = a.preco;
             chk.dataset.nome = a.nome;
             lbl.appendChild(chk);
             lbl.appendChild(document.createTextNode(' ' + a.nome + ' (+R$ ' + valorFmt + ')'));
             container.appendChild(lbl);
-
-            // Checkbox também no PDV
-            const lblPDV = document.createElement('label');
-            lblPDV.className = 'checkbox-item';
-            const chkPDV = document.createElement('input');
-            chkPDV.type = 'checkbox';
-            chkPDV.className = 'acabamento-check-pdv';
-            chkPDV.value = a.preco;
-            chkPDV.dataset.nome = a.nome;
-            lblPDV.appendChild(chkPDV);
-            lblPDV.appendChild(document.createTextNode(' ' + a.nome + ' (+R$ ' + valorFmt + ')'));
-            containerPDV.appendChild(lblPDV);
-
-            // Linha na tabela do painel restrito
-            const tr = document.createElement('tr');
-            const tdNome = document.createElement('td');
-            tdNome.style.fontWeight = 'bold';
-            tdNome.textContent = a.nome;
-            const tdPreco = document.createElement('td');
-            tdPreco.textContent = "R$ " + valorFmt;
-            const tdAcoes = document.createElement('td');
-            const btnDel = document.createElement('button');
-            btnDel.className = 'btn-del';
-            btnDel.textContent = 'Excluir';
-            btnDel.onclick = function() { deletarBD('acabamentos', d.id); };
-            tdAcoes.appendChild(btnDel);
-            tr.appendChild(tdNome);
-            tr.appendChild(tdPreco);
-            tr.appendChild(tdAcoes);
-            lista.appendChild(tr);
         });
+    }
+
+    onSnapshot(collection(db, "acabamentos"), (snap) => {
+        const lista = document.getElementById('lista-acabamentos');
+        lista.innerHTML = "";
+        cacheAcabamentos = {};
+
+        snap.forEach(d => { cacheAcabamentos[d.id] = d.data(); });
+
+        if (snap.empty) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 4;
+            td.innerHTML = '<div class="empty-state">Nenhum acabamento cadastrado. Use o formulário acima para adicionar.</div>';
+            tr.appendChild(td);
+            lista.appendChild(tr);
+        } else {
+            snap.forEach(d => {
+                const a = d.data();
+                const valorFmt = a.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+                // Linha na tabela do painel restrito (com o serviço vinculado)
+                const tr = document.createElement('tr');
+                const tdNome = document.createElement('td');
+                tdNome.style.fontWeight = 'bold';
+                tdNome.textContent = a.nome;
+
+                const tdServ = document.createElement('td');
+                const badgeServ = document.createElement('span');
+                badgeServ.className = 'badge';
+                if (a.servicoId && cacheServicos[a.servicoId]) {
+                    badgeServ.textContent = cacheServicos[a.servicoId].nome;
+                } else if (a.servicoId) {
+                    badgeServ.textContent = '⚠️ Serviço removido';
+                    badgeServ.style.background = '#fde8e8';
+                    badgeServ.style.color = 'var(--danger)';
+                } else {
+                    badgeServ.textContent = '🌐 TODOS (antigo)';
+                    badgeServ.style.background = '#e3ecf9';
+                    badgeServ.style.color = 'var(--info)';
+                }
+                tdServ.appendChild(badgeServ);
+
+                const tdPreco = document.createElement('td');
+                tdPreco.textContent = "R$ " + valorFmt;
+                const tdAcoes = document.createElement('td');
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn-del';
+                btnDel.textContent = 'Excluir';
+                btnDel.onclick = function() { deletarBD('acabamentos', d.id); };
+                tdAcoes.appendChild(btnDel);
+                tr.appendChild(tdNome);
+                tr.appendChild(tdServ);
+                tr.appendChild(tdPreco);
+                tr.appendChild(tdAcoes);
+                lista.appendChild(tr);
+            });
+        }
+
+        // Atualiza as opções exibidas conforme o serviço escolhido no portal e no PDV
+        renderizarAcabamentosServico(document.getElementById('venda-servico').value, document.getElementById('acabamentos-container'), 'acabamento-check');
+        renderizarAcabamentosServico(document.getElementById('pdv-servico').value, document.getElementById('pdv-acabamentos-container'), 'acabamento-check-pdv');
     });
 
     // ===== PDV: VENDA RÁPIDA COM MÚLTIPLOS ITENS + PAGAMENTO PARCIAL (SINAL) =====
@@ -995,10 +1078,11 @@
         this.value = aplicarMascaraTelefone(this.value);
     });
 
-    // Mostra/oculta dimensões conforme o tipo do serviço escolhido no PDV
+    // Mostra/oculta dimensões e atualiza os acabamentos conforme o serviço escolhido no PDV
     document.getElementById('pdv-servico').addEventListener('change', function() {
         const s = cacheServicos[this.value];
         document.getElementById('pdv-dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
+        renderizarAcabamentosServico(this.value, document.getElementById('pdv-acabamentos-container'), 'acabamento-check-pdv');
     });
 
     // Mostra o campo de valor do sinal apenas quando a forma de pagamento é "parcial"
@@ -1292,11 +1376,14 @@
     }
 
     window.cadastrarAcabamento = async function() {
+        const servicoId = document.getElementById('a-servico').value;
         const nome = document.getElementById('a-nome').value.trim();
         const preco = parseFloat(document.getElementById('a-preco').value);
+        if (!servicoId) { alert("Escolha o serviço ao qual este acabamento pertence."); return; }
         if (!nome || isNaN(preco) || preco < 0) { alert("Preencha o nome e o valor do acabamento."); return; }
-        await addDoc(collection(db, "acabamentos"), { nome, preco });
-        alert("Acabamento adicionado! Ele já está visível no orçamento do cliente.");
+        const nomeServico = cacheServicos[servicoId] ? cacheServicos[servicoId].nome : '';
+        await addDoc(collection(db, "acabamentos"), { nome, preco, servicoId, servicoNome: nomeServico });
+        alert("Acabamento adicionado ao serviço \"" + nomeServico + "\"! Ele aparece quando esse serviço é escolhido.");
         document.getElementById('a-nome').value = "";
         document.getElementById('a-preco').value = "";
     }
@@ -1746,10 +1833,12 @@
         }
     }
 
-    // --- CÁLCULO DE ORÇAMENTOS (inalterado) ---
+    // --- CÁLCULO DE ORÇAMENTOS ---
     document.getElementById('venda-servico').addEventListener('change', function() {
         const s = cacheServicos[this.value];
         document.getElementById('dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
+        // Os acabamentos exibidos mudam conforme o serviço escolhido
+        renderizarAcabamentosServico(this.value, document.getElementById('acabamentos-container'), 'acabamento-check');
     });
 
     window.gerarOrcamento = function() {
