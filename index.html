@@ -150,6 +150,33 @@
         .status-pill.andamento { background: #fbf0d9; color: var(--warning); }
         .status-pill.finalizado { background: #dff0ee; color: var(--success); }
 
+        /* ===== PAGAMENTO (sinal / restante) ===== */
+        .pay-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .pay-pill.pago { background: #dff0ee; color: var(--success); }
+        .pay-pill.parcial { background: #fbf0d9; color: var(--warning); }
+        .pay-pill.pendente { background: #fde8e8; color: var(--danger); }
+        .pay-info { font-size: 12.5px; color: var(--text); margin-top: 6px; line-height: 1.55; }
+        .pay-info strong { color: var(--primary); }
+        .btn-quitar { background: var(--success); color: #fff; padding: 7px 12px; font-size: 12px; border-radius: 7px; width: auto; cursor: pointer; border: none; font-weight: 700; margin-top: 8px; }
+        .btn-quitar:hover { background: #115e59; box-shadow: none; }
+
+        /* ===== CARRINHO DO PDV ===== */
+        .cart-list { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+            background: #faf8f2; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+        }
+        .cart-item .ci-info { flex: 1; font-size: 14px; }
+        .cart-item .ci-info strong { color: var(--primary); display: block; margin-bottom: 2px; }
+        .cart-item .ci-info small { color: var(--text-soft); display: block; }
+        .cart-item .ci-total { font-weight: 700; color: var(--primary); white-space: nowrap; }
+        .cart-empty { text-align: center; color: #94a3b8; font-size: 13.5px; padding: 18px 10px; border: 1px dashed var(--border); border-radius: 10px; background: #fdfcf8; }
+        .cart-total-row {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 6px;
+            background: linear-gradient(135deg, #faf6ea, #f3ecd9); border-left: 4px solid var(--accent);
+            padding: 13px 16px; border-radius: 10px; font-size: 17px; font-weight: 700; color: var(--primary);
+        }
+
         .history-toggle { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 0; width: auto; text-align: left; }
         .history-toggle:hover { text-decoration: underline; background: none; box-shadow: none; }
         .history-list { margin-top: 8px; padding: 10px 12px; background: #faf8f2; border-left: 3px solid var(--accent-soft); border-radius: 0 8px 8px 0; font-size: 12.5px; display: none; }
@@ -163,7 +190,7 @@
 
         @media print {
             body { background: #fff; padding: 0; }
-            .tabs, header, .filter-bar, .btn-print-report, #section-cliente-portal, #section-login, #section-pedidos, #section-servicos { display: none !important; }
+            .tabs, header, .filter-bar, .btn-print-report, #section-cliente-portal, #section-login, #section-pedidos, #section-servicos, #section-pdv { display: none !important; }
             #section-relatorios { display: block !important; }
             .card { box-shadow: none; border: none; }
             .report-box { border: 1px solid #ccc; }
@@ -205,12 +232,12 @@
         </div>
     </header>
 
-    <!-- NAVEGAÇÃO PRINCIPAL -->
+    <!-- NAVEGAÇÃO PRINCIPAL: guias públicas + acesso restrito -->
     <div class="tabs">
-        <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Área do Cliente (Acesso Livre)</button>
-        <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Painel da Empresa (Restrito)</button>
+        <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Portal do Cliente</button>
+        <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')">🧾 PDV / Venda Rápida</button>
+        <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
         <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
-        <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')" style="display:none;">🧾 PDV / Venda Rápida</button>
         <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
     </div>
@@ -267,17 +294,91 @@
         </div>
     </div>
 
-    <!-- 🔐 ABA 2: TELA DE LOGIN DA EMPRESA -->
+    <!-- 🧾 ABA 2: PDV — VENDA RÁPIDA (ACESSO LIVRE, FORA DA ÁREA RESTRITA) -->
+    <div id="section-pdv" class="system-section">
+        <div class="card">
+            <h2>🧾 PDV — Lançamento Rápido de Venda (Balcão)</h2>
+            <p class="count-note" style="margin-bottom:16px;">Esta tela fica fora da área restrita: qualquer atendente pode registrar vendas feitas na loja. Adicione <strong>quantos itens quiser</strong> à mesma venda e, se o cliente quiser, registre um <strong>sinal (pagamento parcial)</strong> — o restante é cobrado na entrega.</p>
+
+            <div class="row">
+                <div class="form-group"><label>Nome do Cliente (opcional)</label><input type="text" id="pdv-cliente" placeholder="Ex: Cliente Balcão"></div>
+                <div class="form-group"><label>Telefone / WhatsApp (opcional)</label><input type="tel" id="pdv-tel" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
+            </div>
+
+            <h2 style="font-size:16px; margin-top:10px;">🛒 Adicionar Item à Venda</h2>
+            <div class="form-group">
+                <label>Serviço Vendido (inclui serviços internos)</label>
+                <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
+            </div>
+            <div id="pdv-dimensoes-container">
+                <div class="row form-group">
+                    <div><label>Largura (metros)</label><input type="number" id="pdv-largura" step="0.01" value="1.00"></div>
+                    <div><label>Altura (metros)</label><input type="number" id="pdv-altura" step="0.01" value="1.00"></div>
+                </div>
+            </div>
+            <div class="form-group"><label>Quantidade</label><input type="number" id="pdv-quantidade" value="1" min="1"></div>
+            <div class="form-group">
+                <label>Acabamentos Adicionais (deste item)</label>
+                <div class="checkbox-group" id="pdv-acabamentos-container">
+                    <div style="color:#94a3b8; font-size:13px;">Carregando acabamentos...</div>
+                </div>
+            </div>
+            <button type="button" class="btn-accent" onclick="adicionarItemPDV()">➕ Adicionar Item à Venda</button>
+
+            <h2 style="font-size:16px; margin-top:26px;">🧺 Itens desta Venda <span class="count-note" id="pdv-carrinho-count"></span></h2>
+            <div class="cart-list" id="pdv-carrinho-lista"></div>
+            <div class="cart-total-row" id="pdv-carrinho-total-row" style="display:none;">
+                <span>TOTAL DOS ITENS:</span><span id="pdv-carrinho-total">R$ 0,00</span>
+            </div>
+
+            <h2 style="font-size:16px; margin-top:26px;">💰 Pagamento</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label>Forma de Pagamento</label>
+                    <select id="pdv-pagamento-tipo">
+                        <option value="total" selected>💵 Pagamento total agora</option>
+                        <option value="parcial">💰 Sinal agora — restante na entrega</option>
+                        <option value="entrega">📦 Pagar tudo na entrega</option>
+                    </select>
+                </div>
+                <div class="form-group" id="pdv-sinal-group" style="display:none;">
+                    <label>Valor do Sinal Recebido (R$)</label>
+                    <input type="number" id="pdv-valor-sinal" step="0.01" min="0" placeholder="Ex: 50.00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Situação do Pedido</label>
+                <select id="pdv-status">
+                    <option value="finalizado" selected>✅ Já entregue (Finalizado)</option>
+                    <option value="andamento">⏳ Em produção (Em Andamento)</option>
+                    <option value="recebido">📥 Recebido (a produzir)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🧾 Resumo da Venda</h2>
+            <div class="receipt" id="pdv-recibo">
+                <div id="pdv-recibo-conteudo" style="text-align: center; padding-top: 50px; color: #94a3b8;">Adicione itens à venda no painel ao lado.</div>
+            </div>
+            <div class="actions">
+                <button class="btn-print" onclick="registrarVendaPDV()">💾 Registrar Venda no Sistema</button>
+                <button class="btn-accent" id="btn-imprimir-comprovante-pdv" onclick="imprimirComprovante()" style="display:none;">🖨️ Imprimir Comprovante da Venda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔐 ABA 3: ACESSO RESTRITO — LOGIN DA EMPRESA -->
     <div id="section-login" class="system-section">
         <div class="card" style="max-width: 450px; margin: 40px auto;">
-            <h2>🔐 Login de Funcionário / Admin</h2>
+            <h2>🔐 Acesso Restrito — Funcionário / Admin</h2>
             <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
             <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
             <button onclick="login()">Entrar no Painel Administrativo</button>
         </div>
     </div>
 
-    <!-- 📥 ABA 3: PEDIDOS RECEBIDOS -->
+    <!-- 📥 ABA 4: PEDIDOS RECEBIDOS (RESTRITA) -->
     <div id="section-pedidos" class="system-section">
         <div class="card panel-card">
             <h2>📥 Orçamentos e Pedidos Enviados por Clientes <span class="count-note" id="pedidos-count"></span></h2>
@@ -302,6 +403,15 @@
                     </select>
                 </div>
                 <div class="filter-field">
+                    <label>Pagamento</label>
+                    <select id="filtro-pedidos-pagamento">
+                        <option value="todos">Todos</option>
+                        <option value="pago">✅ Pagos</option>
+                        <option value="parcial">💰 Com sinal (falta restante)</option>
+                        <option value="pendente">⏳ Pendentes</option>
+                    </select>
+                </div>
+                <div class="filter-field">
                     <label>Origem</label>
                     <select id="filtro-pedidos-origem">
                         <option value="todas">Todas</option>
@@ -318,61 +428,14 @@
 
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Acompanhamento do Pedido</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Pagamento</th><th>Acompanhamento do Pedido</th><th>Ações</th></tr></thead>
                     <tbody id="lista-orcamentos"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- 🧾 ABA PDV: VENDA RÁPIDA INTERNA (BALCÃO) -->
-    <div id="section-pdv" class="system-section">
-        <div class="card">
-            <h2>🧾 PDV — Lançamento Rápido de Venda (Balcão)</h2>
-            <p class="count-note" style="margin-bottom:16px;">Use esta tela para registrar vendas feitas diretamente na loja, sem passar pelo portal do cliente. O lançamento entra automaticamente nos relatórios e na lista de pedidos.</p>
-            <div class="form-group"><label>Nome do Cliente (opcional)</label><input type="text" id="pdv-cliente" placeholder="Ex: Cliente Balcão"></div>
-            <div class="form-group"><label>Telefone / WhatsApp (opcional)</label><input type="tel" id="pdv-tel" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
-            <div class="form-group">
-                <label>Serviço Vendido (inclui serviços internos)</label>
-                <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
-            </div>
-            <div id="pdv-dimensoes-container">
-                <div class="row form-group">
-                    <div><label>Largura (metros)</label><input type="number" id="pdv-largura" step="0.01" value="1.00"></div>
-                    <div><label>Altura (metros)</label><input type="number" id="pdv-altura" step="0.01" value="1.00"></div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group"><label>Quantidade</label><input type="number" id="pdv-quantidade" value="1" min="1"></div>
-                <div class="form-group">
-                    <label>Situação do Pedido</label>
-                    <select id="pdv-status">
-                        <option value="finalizado" selected>✅ Já entregue / pago (Finalizado)</option>
-                        <option value="andamento">⏳ Em produção (Em Andamento)</option>
-                        <option value="recebido">📥 Recebido (a produzir)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Acabamentos Adicionais</label>
-                <div class="checkbox-group" id="pdv-acabamentos-container">
-                    <div style="color:#94a3b8; font-size:13px;">Carregando acabamentos...</div>
-                </div>
-            </div>
-            <button type="button" class="btn-accent" onclick="calcularPDV()">Calcular Valor da Venda</button>
-        </div>
-        <div class="card">
-            <h2>🧾 Resumo da Venda</h2>
-            <div class="receipt" id="pdv-recibo">
-                <div id="pdv-recibo-conteudo" style="text-align: center; padding-top: 50px; color: #94a3b8;">Preencha os dados ao lado e clique em Calcular.</div>
-            </div>
-            <div class="actions">
-                <button class="btn-print" onclick="registrarVendaPDV()">💾 Registrar Venda no Sistema</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🛠️ ABA 4: CONFIGURAÇÃO DE SERVIÇOS -->
+    <!-- 🛠️ ABA 5: CONFIGURAÇÃO DE SERVIÇOS (RESTRITA) -->
     <div id="section-servicos" class="system-section">
         <div class="card">
             <h2>🏪 Identidade da Gráfica (Nome no Cabeçalho)</h2>
@@ -434,7 +497,7 @@
         </div>
     </div>
 
-    <!-- 📈 ABA 5: RELATÓRIOS -->
+    <!-- 📈 ABA 6: RELATÓRIOS (RESTRITA) -->
     <div id="section-relatorios" class="system-section">
         <div class="card panel-card">
             <h2>📈 Desempenho e Caixa da Gráfica</h2>
@@ -471,6 +534,12 @@
                 <div class="report-box"><h3>Ticket Médio</h3><p id="rep-ticket">R$ 0,00</p></div>
             </div>
 
+            <!-- Totais de caixa (pagamentos) -->
+            <div class="report-grid">
+                <div class="report-box"><h3>💵 Valor Recebido (sinais + pagamentos)</h3><p id="rep-recebido-caixa">R$ 0,00</p></div>
+                <div class="report-box"><h3>⏳ A Receber (restam na entrega)</h3><p id="rep-a-receber">R$ 0,00</p></div>
+            </div>
+
             <!-- Totais por status -->
             <div class="report-grid">
                 <div class="report-box"><h3>📥 Recebidos</h3><p id="rep-qtd-recebido">0</p><span class="count-note" id="rep-val-recebido">R$ 0,00</span></div>
@@ -488,7 +557,7 @@
             <h2 style="margin-top: 26px;">🧾 Detalhamento dos Pedidos no Período</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Status Atual</th><th>Recebido em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
+                    <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pagamento</th><th>Status Atual</th><th>Recebido em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
                     <tbody id="lista-relatorio"></tbody>
                 </table>
             </div>
@@ -597,6 +666,24 @@
         return true;
     }
 
+    // ===== PAGAMENTO: utilitários (sinal / restante / quitação) =====
+    // Situações: 'pago' (quitado), 'parcial' (sinal dado, falta restante), 'pendente' (nada pago ainda)
+    const PAG_ROTULO = { pago: 'Pago', parcial: 'Sinal pago', pendente: 'Pendente' };
+
+    function fmtMoeda(v) {
+        return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
+    function pagamentoDoPedido(item) {
+        // Compatibilidade: pedidos antigos (sem campos de pagamento) são tratados como quitados
+        const total = item.total || 0;
+        const pago = (typeof item.valorPago === 'number') ? item.valorPago : total;
+        const restante = Math.max(0, total - pago);
+        let situacao = item.situacaoPagamento;
+        if (!PAG_ROTULO[situacao]) situacao = restante <= 0.004 ? 'pago' : (pago > 0 ? 'parcial' : 'pendente');
+        return { total, pago, restante, situacao };
+    }
+
     // --- AUTENTICAÇÃO INTERNA (inalterada) ---
     window.login = function() {
         const email = document.getElementById('login-email').value;
@@ -624,14 +711,12 @@
         if (user) {
             loginBtn.style.display = 'none';
             document.getElementById('tab-pedidos-btn').style.display = 'block';
-            document.getElementById('tab-pdv-btn').style.display = 'block';
             document.getElementById('tab-servicos-btn').style.display = 'block';
             document.getElementById('tab-relatorios-btn').style.display = 'block';
             statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
         } else {
             loginBtn.style.display = 'block';
             document.getElementById('tab-pedidos-btn').style.display = 'none';
-            document.getElementById('tab-pdv-btn').style.display = 'none';
             document.getElementById('tab-servicos-btn').style.display = 'none';
             document.getElementById('tab-relatorios-btn').style.display = 'none';
             statusArea.innerHTML = `<span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>`;
@@ -639,7 +724,7 @@
         }
     });
 
-    // --- NAVEGAÇÃO DE ABAS (inalterada) ---
+    // --- NAVEGAÇÃO DE ABAS ---
     window.switchTab = function(tab) {
         document.getElementById('section-cliente-portal').style.removeProperty('display');
         document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
@@ -903,8 +988,8 @@
         });
     });
 
-    // ===== PDV: VENDA RÁPIDA INTERNA (BALCÃO) =====
-    let vendaPDVAtual = null;
+    // ===== PDV: VENDA RÁPIDA COM MÚLTIPLOS ITENS + PAGAMENTO PARCIAL (SINAL) =====
+    let carrinhoPDV = []; // itens adicionados à venda atual
 
     // Máscara de telefone também no campo do PDV
     const campoTelPDV = document.getElementById('pdv-tel');
@@ -918,10 +1003,23 @@
         document.getElementById('pdv-dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
     });
 
-    window.calcularPDV = function() {
+    // Mostra o campo de valor do sinal apenas quando a forma de pagamento é "parcial"
+    document.getElementById('pdv-pagamento-tipo').addEventListener('change', function() {
+        document.getElementById('pdv-sinal-group').style.display = this.value === 'parcial' ? 'block' : 'none';
+        atualizarResumoPDV();
+    });
+    document.getElementById('pdv-valor-sinal').addEventListener('input', atualizarResumoPDV);
+
+    function totalCarrinhoPDV() {
+        return carrinhoPDV.reduce((soma, it) => soma + it.total, 0);
+    }
+
+    // Adiciona um item (serviço + medidas + quantidade + acabamentos) ao carrinho da venda
+    window.adicionarItemPDV = function() {
         const servicoId = document.getElementById('pdv-servico').value;
         const quantidade = parseInt(document.getElementById('pdv-quantidade').value) || 1;
-        if (!servicoId) { alert("Selecione o serviço vendido."); return; }
+        if (!servicoId) { alert("Selecione o serviço vendido para adicionar o item."); return; }
+        if (quantidade < 1) { alert("Informe uma quantidade válida (mínimo 1)."); return; }
 
         const servico = cacheServicos[servicoId];
         let totalCusto = 0, dimensionStr = "";
@@ -944,6 +1042,142 @@
             acabamentosSelecionados.push({ nome: el.dataset.nome || 'Acabamento', valor: valor });
         });
 
+        carrinhoPDV.push({
+            servico: servico.nome,
+            medidas: dimensionStr,
+            qtd: quantidade,
+            acabamentos: acabamentosSelecionados,
+            totalAcabamentos: totalAdicionais,
+            total: totalCusto + totalAdicionais
+        });
+
+        // Limpa os campos do item para facilitar a inclusão do próximo
+        document.getElementById('pdv-servico').value = '';
+        document.getElementById('pdv-quantidade').value = 1;
+        document.getElementById('pdv-largura').value = 1.00;
+        document.getElementById('pdv-altura').value = 1.00;
+        document.getElementById('pdv-dimensoes-container').style.display = 'block';
+        document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
+
+        renderizarCarrinhoPDV();
+    }
+
+    window.removerItemPDV = function(indice) {
+        carrinhoPDV.splice(indice, 1);
+        renderizarCarrinhoPDV();
+    }
+
+    function renderizarCarrinhoPDV() {
+        const lista = document.getElementById('pdv-carrinho-lista');
+        const totalRow = document.getElementById('pdv-carrinho-total-row');
+        lista.innerHTML = "";
+
+        document.getElementById('pdv-carrinho-count').textContent = carrinhoPDV.length
+            ? `(${carrinhoPDV.length} ${carrinhoPDV.length === 1 ? 'item' : 'itens'})`
+            : '';
+
+        if (carrinhoPDV.length === 0) {
+            lista.innerHTML = '<div class="cart-empty">Nenhum item adicionado ainda. Monte o item acima e clique em "Adicionar Item à Venda".</div>';
+            totalRow.style.display = 'none';
+        } else {
+            carrinhoPDV.forEach((it, idx) => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+
+                const info = document.createElement('div');
+                info.className = 'ci-info';
+                const acabTxt = it.acabamentos.length
+                    ? ' · Acabamentos: ' + it.acabamentos.map(a => a.nome).join(', ')
+                    : '';
+                info.innerHTML = `<strong>${idx + 1}. ${it.servico}</strong><small>${it.medidas} · Qtd: ${it.qtd}x${acabTxt}</small>`;
+
+                const total = document.createElement('span');
+                total.className = 'ci-total';
+                total.textContent = 'R$ ' + fmtMoeda(it.total);
+
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn-del';
+                btnDel.textContent = 'Remover';
+                btnDel.onclick = function() { removerItemPDV(idx); };
+
+                div.appendChild(info);
+                div.appendChild(total);
+                div.appendChild(btnDel);
+                lista.appendChild(div);
+            });
+            totalRow.style.display = 'flex';
+            document.getElementById('pdv-carrinho-total').textContent = 'R$ ' + fmtMoeda(totalCarrinhoPDV());
+        }
+
+        atualizarResumoPDV();
+    }
+
+    // Atualiza o painel "Resumo da Venda" sempre que o carrinho ou o pagamento mudam
+    function atualizarResumoPDV() {
+        const box = document.getElementById('pdv-recibo-conteudo');
+        if (carrinhoPDV.length === 0) {
+            box.innerHTML = '<div style="text-align:center;padding-top:50px;color:#94a3b8;">Adicione itens à venda no painel ao lado.</div>';
+            return;
+        }
+
+        const total = totalCarrinhoPDV();
+        const tipoPag = document.getElementById('pdv-pagamento-tipo').value;
+        const sinal = parseFloat(document.getElementById('pdv-valor-sinal').value) || 0;
+        const cliente = document.getElementById('pdv-cliente').value.trim() || 'Cliente Balcão';
+        const telefone = document.getElementById('pdv-tel').value.trim() || '—';
+        const statusEscolhido = document.getElementById('pdv-status').value;
+
+        const itensHtml = carrinhoPDV.map((it, idx) => `
+            <div class="receipt-row" style="align-items:flex-start;">
+                <strong style="min-width:26px;">${idx + 1}.</strong>
+                <span style="flex:1;">${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
+                <span style="white-space:nowrap;">R$ ${fmtMoeda(it.total)}</span>
+            </div>
+        `).join('');
+
+        let pagamentoHtml = '';
+        if (tipoPag === 'parcial') {
+            const restante = Math.max(0, total - sinal);
+            pagamentoHtml = `
+                <div class="receipt-row"><strong>Pagamento:</strong> <span>💰 Sinal de R$ ${fmtMoeda(sinal)}</span></div>
+                <div class="receipt-row" style="color:var(--warning);"><strong>Restante na entrega:</strong> <span><strong>R$ ${fmtMoeda(restante)}</strong></span></div>
+            `;
+        } else if (tipoPag === 'entrega') {
+            pagamentoHtml = `<div class="receipt-row"><strong>Pagamento:</strong> <span>📦 Tudo na entrega (R$ ${fmtMoeda(total)})</span></div>`;
+        } else {
+            pagamentoHtml = `<div class="receipt-row"><strong>Pagamento:</strong> <span>💵 Total pago agora</span></div>`;
+        }
+
+        box.innerHTML = `
+            <div class="receipt-header"><h3>Venda de Balcão</h3><p>Conferência antes de registrar</p></div>
+            <div class="receipt-row"><strong>Cliente:</strong> <span>${cliente}</span></div>
+            <div class="receipt-row"><strong>Telefone:</strong> <span>${telefone}</span></div>
+            <div class="receipt-row"><strong>Itens:</strong> <span>${carrinhoPDV.length}</span></div>
+            ${itensHtml}
+            ${pagamentoHtml}
+            <div class="receipt-row"><strong>Situação:</strong> <span>${STATUS_ROTULO[statusEscolhido]}</span></div>
+            <div class="total-box"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(total)}</span></div>
+        `;
+    }
+
+    window.registrarVendaPDV = async function() {
+        if (carrinhoPDV.length === 0) { alert("Adicione pelo menos um item à venda antes de registrar."); return; }
+
+        const total = totalCarrinhoPDV();
+        const tipoPag = document.getElementById('pdv-pagamento-tipo').value;
+        const sinal = parseFloat(document.getElementById('pdv-valor-sinal').value) || 0;
+
+        let valorPago = 0, situacaoPagamento = 'pendente';
+        if (tipoPag === 'total') {
+            valorPago = total;
+            situacaoPagamento = 'pago';
+        } else if (tipoPag === 'parcial') {
+            if (sinal <= 0) { alert("Informe o valor do sinal recebido (maior que zero)."); document.getElementById('pdv-valor-sinal').focus(); return; }
+            if (sinal >= total) { alert("O sinal é igual ou maior que o total. Use a opção 'Pagamento total agora'."); return; }
+            valorPago = sinal;
+            situacaoPagamento = 'parcial';
+        }
+
         const statusEscolhido = document.getElementById('pdv-status').value;
         const idxStatus = STATUS_ORDEM.indexOf(statusEscolhido);
         const historico = [];
@@ -951,58 +1185,112 @@
             historico.push({ status: STATUS_ORDEM[i], timestamp: Date.now() });
         }
 
-        vendaPDVAtual = {
+        const primeiroItem = carrinhoPDV[0];
+        const venda = {
             data: new Date().toLocaleDateString('pt-BR'),
             timestamp: Date.now(),
             cliente: document.getElementById('pdv-cliente').value.trim() || 'Cliente Balcão',
             telefone: document.getElementById('pdv-tel').value.trim() || '—',
-            servico: servico.nome,
-            medidas: dimensionStr,
-            qtd: quantidade,
+            // Campos de compatibilidade (primeiro item) para telas antigas
+            servico: carrinhoPDV.length > 1 ? `${primeiroItem.servico} (+${carrinhoPDV.length - 1} ${carrinhoPDV.length === 2 ? 'item' : 'itens'})` : primeiroItem.servico,
+            medidas: primeiroItem.medidas,
+            qtd: carrinhoPDV.reduce((s, it) => s + it.qtd, 0),
             logo: '',
-            acabamentos: acabamentosSelecionados,
-            totalAcabamentos: totalAdicionais,
-            total: totalCusto + totalAdicionais,
+            // Lista completa de itens da venda
+            itens: carrinhoPDV,
+            acabamentos: carrinhoPDV.flatMap(it => it.acabamentos),
+            totalAcabamentos: carrinhoPDV.reduce((s, it) => s + it.totalAcabamentos, 0),
+            total: total,
+            // Pagamento (sinal / restante)
+            valorPago: valorPago,
+            valorRestante: Math.max(0, total - valorPago),
+            situacaoPagamento: situacaoPagamento,
+            historicoPagamento: valorPago > 0
+                ? [{ tipo: 'sinal', valor: valorPago, timestamp: Date.now() }]
+                : [],
             origem: 'pdv',
             status: statusEscolhido,
             historicoStatus: historico
         };
 
-        const acabTxt = acabamentosSelecionados.length
-            ? acabamentosSelecionados.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>')
-            : 'Nenhum';
-
-        document.getElementById('pdv-recibo-conteudo').innerHTML = `
-            <div class="receipt-header"><h3>Venda de Balcão</h3><p>Conferência antes de registrar</p></div>
-            <div class="receipt-row"><strong>Cliente:</strong> <span>${vendaPDVAtual.cliente}</span></div>
-            <div class="receipt-row"><strong>Telefone:</strong> <span>${vendaPDVAtual.telefone}</span></div>
-            <div class="receipt-row"><strong>Serviço:</strong> <span>${vendaPDVAtual.servico}</span></div>
-            <div class="receipt-row"><strong>Especificação:</strong> <span>${vendaPDVAtual.medidas}</span></div>
-            <div class="receipt-row"><strong>Quantidade:</strong> <span>${vendaPDVAtual.qtd}x</span></div>
-            <div class="receipt-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${acabTxt}</span></div>
-            <div class="receipt-row"><strong>Situação:</strong> <span>${STATUS_ROTULO[statusEscolhido]}</span></div>
-            <div class="total-box"><span>TOTAL DA VENDA:</span><span>R$ ${vendaPDVAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
-        `;
-    }
-
-    window.registrarVendaPDV = async function() {
-        if (!vendaPDVAtual) { alert("Calcule o valor da venda antes de registrar."); return; }
         try {
-            await addDoc(collection(db, "vendas"), vendaPDVAtual);
+            await addDoc(collection(db, "vendas"), venda);
         } catch (e) {
             console.error("Falha ao registrar venda PDV:", e);
             alert("Não foi possível registrar a venda. Verifique sua conexão.");
             return;
         }
-        alert("Venda registrada com sucesso! Ela já consta nos pedidos e nos relatórios.");
-        vendaPDVAtual = null;
+
+        // Monta o comprovante da venda (com itens e pagamento) e libera a impressão
+        montarComprovanteVendaPDV(venda);
+        document.getElementById('btn-imprimir-comprovante-pdv').style.display = 'block';
+
+        const restante = venda.valorRestante;
+        alert(restante > 0
+            ? `Venda registrada! Sinal de R$ ${fmtMoeda(valorPago)} recebido. Restam R$ ${fmtMoeda(restante)} a receber na entrega.`
+            : "Venda registrada e quitada com sucesso! Ela já consta nos pedidos e nos relatórios.");
+
+        // Limpa a tela para a próxima venda
+        carrinhoPDV = [];
         document.getElementById('pdv-cliente').value = '';
         document.getElementById('pdv-tel').value = '';
         document.getElementById('pdv-servico').value = '';
         document.getElementById('pdv-quantidade').value = 1;
         document.getElementById('pdv-status').value = 'finalizado';
+        document.getElementById('pdv-pagamento-tipo').value = 'total';
+        document.getElementById('pdv-valor-sinal').value = '';
+        document.getElementById('pdv-sinal-group').style.display = 'none';
         document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
-        document.getElementById('pdv-recibo-conteudo').innerHTML = '<div style="text-align:center;padding-top:50px;color:#94a3b8;">Preencha os dados ao lado e clique em Calcular.</div>';
+        renderizarCarrinhoPDV();
+    }
+
+    // ===== COMPROVANTE DA VENDA PDV (impressão / salvar em PDF) =====
+    function montarComprovanteVendaPDV(venda) {
+        const nomeGrafica = document.getElementById('header-nome-grafica').textContent;
+        const subtituloGrafica = document.getElementById('header-subtitulo-grafica').textContent;
+        const dataHoraVenda = new Date().toLocaleString('pt-BR');
+
+        const itensHtml = (venda.itens || []).map((it, idx) => `
+            <div class="comp-row" style="align-items:flex-start;">
+                <strong style="min-width:26px;">${idx + 1}.</strong>
+                <span style="flex:1;">${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos && it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
+                <span style="white-space:nowrap;">R$ ${fmtMoeda(it.total)}</span>
+            </div>
+        `).join('');
+
+        const pag = pagamentoDoPedido(venda);
+        let pagamentoHtml = '';
+        if (pag.situacao === 'parcial') {
+            pagamentoHtml = `
+                <div class="comp-row"><strong>Sinal recebido:</strong> <span>R$ ${fmtMoeda(pag.pago)}</span></div>
+                <div class="comp-row" style="color:#b45309;"><strong>Restante na entrega:</strong> <span><strong>R$ ${fmtMoeda(pag.restante)}</strong></span></div>
+            `;
+        } else if (pag.situacao === 'pendente') {
+            pagamentoHtml = `<div class="comp-row"><strong>Pagamento:</strong> <span>A pagar na entrega</span></div>`;
+        } else {
+            pagamentoHtml = `<div class="comp-row"><strong>Pagamento:</strong> <span>Quitado no ato da venda</span></div>`;
+        }
+
+        document.getElementById('area-impressao-comprovante').innerHTML = `
+            <div class="comp-wrap">
+                <div class="comp-head">
+                    <h1>${nomeGrafica}</h1>
+                    <p>${subtituloGrafica}</p>
+                    <p style="margin-top:8px; font-weight:700; color:#1a2332;">COMPROVANTE DE VENDA — BALCÃO (PDV)</p>
+                </div>
+                <div class="comp-row"><strong>Data da Venda:</strong> <span>${dataHoraVenda}</span></div>
+                <div class="comp-row"><strong>Cliente:</strong> <span>${venda.cliente}</span></div>
+                <div class="comp-row"><strong>WhatsApp:</strong> <span>${venda.telefone}</span></div>
+                <div class="comp-row"><strong>Itens:</strong> <span>${(venda.itens || []).length}</span></div>
+                ${itensHtml}
+                ${pagamentoHtml}
+                <div class="comp-total"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(venda.total)}</span></div>
+                <div class="comp-foot">
+                    Este comprovante confirma o registro da venda no balcão.<br>
+                    ${pag.restante > 0 ? `O restante de R$ ${fmtMoeda(pag.restante)} deverá ser pago na entrega.` : 'Venda quitada integralmente.'}
+                </div>
+            </div>
+        `;
     }
 
     window.cadastrarAcabamento = async function() {
@@ -1045,6 +1333,32 @@
             await updateDoc(doc(db, "vendas", id), { status: novoStatus, historicoStatus: historico });
         } catch (e) {
             alert("Não foi possível atualizar o status. Verifique sua conexão.");
+        }
+    }
+
+    // ===== QUITAÇÃO: receber o valor restante na entrega =====
+    window.quitarPedido = async function(id) {
+        const pedido = cachePedidos.find(p => p.id === id);
+        if (!pedido) return;
+
+        const pag = pagamentoDoPedido(pedido);
+        if (pag.restante <= 0) { alert("Este pedido já está quitado."); return; }
+
+        if (!confirm(`Confirmar o recebimento de R$ ${fmtMoeda(pag.restante)} referente ao restante deste pedido?`)) return;
+
+        const historicoPag = Array.isArray(pedido.historicoPagamento) ? pedido.historicoPagamento.slice() : [];
+        historicoPag.push({ tipo: 'quitacao', valor: pag.restante, timestamp: Date.now() });
+
+        try {
+            await updateDoc(doc(db, "vendas", id), {
+                valorPago: pag.total,
+                valorRestante: 0,
+                situacaoPagamento: 'pago',
+                historicoPagamento: historicoPag
+            });
+            alert("Pagamento restante registrado! Pedido totalmente quitado.");
+        } catch (e) {
+            alert("Não foi possível registrar a quitação. Verifique sua conexão.");
         }
     }
 
@@ -1129,23 +1443,26 @@
         document.getElementById('filtro-pedidos-inicio').value = '';
         document.getElementById('filtro-pedidos-fim').value = '';
         document.getElementById('filtro-pedidos-status').value = 'todos';
+        document.getElementById('filtro-pedidos-pagamento').value = 'todos';
         document.getElementById('filtro-pedidos-origem').value = 'todas';
         document.getElementById('filtro-pedidos-busca').value = '';
         renderizarPedidos();
     }
-    ;['filtro-pedidos-inicio','filtro-pedidos-fim','filtro-pedidos-status','filtro-pedidos-origem'].forEach(id => {
+    ;['filtro-pedidos-inicio','filtro-pedidos-fim','filtro-pedidos-status','filtro-pedidos-pagamento','filtro-pedidos-origem'].forEach(id => {
         document.getElementById(id).addEventListener('change', renderizarPedidos);
     });
     document.getElementById('filtro-pedidos-busca').addEventListener('input', renderizarPedidos);
 
     function pedidosFiltrados() {
         const statusFiltro = document.getElementById('filtro-pedidos-status').value;
+        const pagFiltro = document.getElementById('filtro-pedidos-pagamento').value;
         const origemFiltro = document.getElementById('filtro-pedidos-origem').value;
         const busca = document.getElementById('filtro-pedidos-busca').value.trim().toLowerCase();
 
         return cachePedidos.filter(item => {
             if (!dentroDoPeriodo(item, 'filtro-pedidos-inicio', 'filtro-pedidos-fim')) return false;
             if (statusFiltro !== 'todos' && statusDoPedido(item) !== statusFiltro) return false;
+            if (pagFiltro !== 'todos' && pagamentoDoPedido(item).situacao !== pagFiltro) return false;
             const origemItem = item.origem === 'pdv' ? 'pdv' : 'portal';
             if (origemFiltro !== 'todas' && origemItem !== origemFiltro) return false;
             if (busca) {
@@ -1166,7 +1483,7 @@
         if (lista.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 9;
+            td.colSpan = 10;
             td.innerHTML = '<div class="empty-state">Nenhum pedido encontrado para os filtros selecionados.</div>';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -1186,10 +1503,16 @@
             tdCliente.innerHTML = badgeOrigem + "<strong>" + item.cliente + "</strong><br><small>" + item.telefone + "</small>";
 
             const tdServico = document.createElement('td');
-            tdServico.textContent = item.servico;
+            if (Array.isArray(item.itens) && item.itens.length > 0) {
+                tdServico.innerHTML = item.itens.map(it =>
+                    `<div style="margin-bottom:6px;"><strong>${it.servico}</strong><br><small>${it.medidas} · ${it.qtd}x${it.acabamentos && it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></div>`
+                ).join('');
+            } else {
+                tdServico.textContent = item.servico;
+            }
 
             const tdMedidas = document.createElement('td');
-            tdMedidas.innerHTML = "<small>" + item.medidas + "</small>";
+            tdMedidas.innerHTML = "<small>" + (item.medidas || '—') + "</small>";
 
             const tdQtd = document.createElement('td');
             tdQtd.textContent = item.qtd + "x";
@@ -1214,7 +1537,28 @@
             }
 
             const tdTotal = document.createElement('td');
-            tdTotal.innerHTML = "<strong>R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + "</strong>";
+            tdTotal.innerHTML = "<strong>R$ " + fmtMoeda(item.total) + "</strong>";
+
+            // Coluna de pagamento: situação, valores e botão de quitação na entrega
+            const tdPag = document.createElement('td');
+            const pag = pagamentoDoPedido(item);
+            const payPill = document.createElement('span');
+            payPill.className = 'pay-pill ' + pag.situacao;
+            payPill.textContent = PAG_ROTULO[pag.situacao];
+            tdPag.appendChild(payPill);
+            const payInfo = document.createElement('div');
+            payInfo.className = 'pay-info';
+            payInfo.innerHTML = pag.situacao === 'pago'
+                ? `Recebido: <strong>R$ ${fmtMoeda(pag.pago)}</strong>`
+                : `Recebido: <strong>R$ ${fmtMoeda(pag.pago)}</strong><br>Resta na entrega: <strong style="color:var(--warning);">R$ ${fmtMoeda(pag.restante)}</strong>`;
+            tdPag.appendChild(payInfo);
+            if (pag.restante > 0) {
+                const btnQuitar = document.createElement('button');
+                btnQuitar.className = 'btn-quitar';
+                btnQuitar.textContent = '💵 Receber restante';
+                btnQuitar.onclick = function() { quitarPedido(item.id); };
+                tdPag.appendChild(btnQuitar);
+            }
 
             // Coluna de acompanhamento com checklist + status atual
             const tdStatus = document.createElement('td');
@@ -1240,6 +1584,7 @@
             tr.appendChild(tdQtd);
             tr.appendChild(tdLogo);
             tr.appendChild(tdTotal);
+            tr.appendChild(tdPag);
             tr.appendChild(tdStatus);
             tr.appendChild(tdAcoes);
 
@@ -1277,7 +1622,7 @@
         document.getElementById('rep-periodo-desc').textContent = desc;
 
         // Totais gerais do período
-        let totalFaturamento = 0;
+        let totalFaturamento = 0, totalRecebidoCaixa = 0, totalAReceber = 0;
         const totais = { recebido: {qtd:0, val:0}, andamento: {qtd:0, val:0}, finalizado: {qtd:0, val:0} };
         const totaisOrigem = { portal: {qtd:0, val:0}, pdv: {qtd:0, val:0} };
         lista.forEach(item => {
@@ -1288,21 +1633,26 @@
             const origem = item.origem === 'pdv' ? 'pdv' : 'portal';
             totaisOrigem[origem].qtd++;
             totaisOrigem[origem].val += item.total;
+            const pag = pagamentoDoPedido(item);
+            totalRecebidoCaixa += pag.pago;
+            totalAReceber += pag.restante;
         });
         const totalPedidos = lista.length;
 
-        document.getElementById('rep-faturamento').innerText = `R$ ${totalFaturamento.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        document.getElementById('rep-faturamento').innerText = `R$ ${fmtMoeda(totalFaturamento)}`;
         document.getElementById('rep-pedidos').innerText = totalPedidos;
-        document.getElementById('rep-ticket').innerText = `R$ ${(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        document.getElementById('rep-ticket').innerText = `R$ ${fmtMoeda(totalPedidos > 0 ? (totalFaturamento / totalPedidos) : 0)}`;
+        document.getElementById('rep-recebido-caixa').innerText = `R$ ${fmtMoeda(totalRecebidoCaixa)}`;
+        document.getElementById('rep-a-receber').innerText = `R$ ${fmtMoeda(totalAReceber)}`;
 
         STATUS_ORDEM.forEach(st => {
             document.getElementById('rep-qtd-' + st).innerText = totais[st].qtd;
-            document.getElementById('rep-val-' + st).innerText = `R$ ${totais[st].val.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            document.getElementById('rep-val-' + st).innerText = `R$ ${fmtMoeda(totais[st].val)}`;
         });
 
         ['portal','pdv'].forEach(o => {
             document.getElementById('rep-qtd-' + o).innerText = totaisOrigem[o].qtd;
-            document.getElementById('rep-val-' + o).innerText = `R$ ${totaisOrigem[o].val.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            document.getElementById('rep-val-' + o).innerText = `R$ ${fmtMoeda(totaisOrigem[o].val)}`;
         });
 
         // Detalhamento linha a linha
@@ -1311,7 +1661,7 @@
         if (lista.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 9;
             td.innerHTML = '<div class="empty-state">Nenhum pedido no período selecionado.</div>';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -1321,18 +1671,32 @@
         lista.forEach(item => {
             const tr = document.createElement('tr');
             const st = statusDoPedido(item);
+            const pag = pagamentoDoPedido(item);
 
             const celulas = [
                 item.data,
                 (item.origem === 'pdv' ? '🧾 ' : '🌐 ') + item.cliente,
                 item.servico,
-                "R$ " + item.total.toLocaleString('pt-BR',{minimumFractionDigits:2})
+                "R$ " + fmtMoeda(item.total)
             ];
             celulas.forEach(txt => {
                 const td = document.createElement('td');
                 td.textContent = txt;
                 tr.appendChild(td);
             });
+
+            const tdPag = document.createElement('td');
+            const payPill = document.createElement('span');
+            payPill.className = 'pay-pill ' + pag.situacao;
+            payPill.textContent = PAG_ROTULO[pag.situacao];
+            tdPag.appendChild(payPill);
+            if (pag.restante > 0) {
+                const info = document.createElement('div');
+                info.className = 'pay-info';
+                info.innerHTML = `Resta: <strong>R$ ${fmtMoeda(pag.restante)}</strong>`;
+                tdPag.appendChild(info);
+            }
+            tr.appendChild(tdPag);
 
             const tdStatus = document.createElement('td');
             const pill = document.createElement('span');
@@ -1435,7 +1799,7 @@
 
         let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
         let visualAcabamentos = acabamentosSelecionados.length
-            ? `<div class="receipt-row"><strong>Acabamentos:</strong><span style="text-align:right;">${acabamentosSelecionados.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>')}</span></div>`
+            ? `<div class="receipt-row"><strong>Acabamentos:</strong><span style="text-align:right;">${acabamentosSelecionados.map(a => `${a.nome} (+R$ ${fmtMoeda(a.valor)})`).join('<br>')}</span></div>`
             : `<div class="receipt-row"><strong>Acabamentos:</strong><span>Nenhum</span></div>`;
 
         // Novo cálculo: esconde o botão de impressão até que o pedido seja enviado
@@ -1449,7 +1813,7 @@
             <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
             ${visualAcabamentos}
             ${visualLogo}
-            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${fmtMoeda(orcamentoAtual.total)}</span></div>
         `;
     }
 
@@ -1471,8 +1835,8 @@
             <div class="receipt-row"><strong>Produto:</strong> <span>${orcamentoAtual.servico}</span></div>
             <div class="receipt-row"><strong>Especificação:</strong> <span>${orcamentoAtual.medidas}</span></div>
             <div class="receipt-row"><strong>Quantidade:</strong> <span>${orcamentoAtual.qtd}x</span></div>
-            <div class="receipt-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${orcamentoAtual.acabamentos && orcamentoAtual.acabamentos.length ? orcamentoAtual.acabamentos.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>') : 'Nenhum'}</span></div>
-            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${orcamentoAtual.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+            <div class="receipt-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${orcamentoAtual.acabamentos && orcamentoAtual.acabamentos.length ? orcamentoAtual.acabamentos.map(a => `${a.nome} (+R$ ${fmtMoeda(a.valor)})`).join('<br>') : 'Nenhum'}</span></div>
+            <div class="total-box"><span>VALOR ESTIMADO:</span><span>R$ ${fmtMoeda(orcamentoAtual.total)}</span></div>
             <p style="text-align:center; margin-top:16px; font-size:13px; color:#6b7280;">Nossa equipe entrará em contato pelo WhatsApp informado.<br>Use o botão abaixo para <strong>imprimir ou salvar o comprovante em PDF</strong>.</p>
         `;
         document.getElementById('btn-imprimir-comprovante').style.display = 'block';
@@ -1491,7 +1855,7 @@
         const dataHoraEnvio = new Date().toLocaleString('pt-BR');
         const visualLogo = pedido.logo ? `<div style="text-align:center;margin:12px 0;"><img src="${pedido.logo}" style="max-height:90px;border:1px solid #cbd5e1;padding:3px;border-radius:6px;"></div>` : '';
         const acabamentosTexto = pedido.acabamentos && pedido.acabamentos.length
-            ? pedido.acabamentos.map(a => `${a.nome} (+R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})})`).join('<br>')
+            ? pedido.acabamentos.map(a => `${a.nome} (+R$ ${fmtMoeda(a.valor)})`).join('<br>')
             : 'Nenhum';
 
         document.getElementById('area-impressao-comprovante').innerHTML = `
@@ -1510,7 +1874,7 @@
                 <div class="comp-row"><strong>Acabamentos:</strong> <span style="text-align:right;">${acabamentosTexto}</span></div>
                 <div class="comp-row"><strong>Situação:</strong> <span>Enviado para aprovação da gráfica</span></div>
                 ${visualLogo}
-                <div class="comp-total"><span>VALOR ESTIMADO:</span><span>R$ ${pedido.total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+                <div class="comp-total"><span>VALOR ESTIMADO:</span><span>R$ ${fmtMoeda(pedido.total)}</span></div>
                 <div class="comp-foot">
                     Este comprovante confirma o envio do pedido de orçamento.<br>
                     O valor final será confirmado pela equipe da gráfica após análise da arte.
@@ -1521,13 +1885,16 @@
 
     window.imprimirComprovante = function() {
         if (!document.getElementById('area-impressao-comprovante').innerHTML.trim()) {
-            alert("Nenhum comprovante disponível. Envie um pedido primeiro.");
+            alert("Nenhum comprovante disponível. Envie um pedido ou registre uma venda primeiro.");
             return;
         }
         document.body.classList.add('imprimindo-comprovante');
         window.print();
         setTimeout(() => document.body.classList.remove('imprimindo-comprovante'), 500);
     }
+
+    // Inicializa o carrinho do PDV vazio
+    renderizarCarrinhoPDV();
 </script>
 </body>
 </html>
