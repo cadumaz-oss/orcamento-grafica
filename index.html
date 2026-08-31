@@ -236,8 +236,8 @@
     <div class="tabs">
         <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Portal do Cliente</button>
         <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')">🧾 PDV / Venda Rápida</button>
+        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
-        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
     </div>
@@ -378,7 +378,7 @@
         </div>
     </div>
 
-    <!-- 📥 ABA 4: PEDIDOS RECEBIDOS (RESTRITA) -->
+    <!-- 📥 ABA 4: PEDIDOS RECEBIDOS (ACESSO LIVRE — fora da área restrita) -->
     <div id="section-pedidos" class="system-section">
         <div class="card panel-card">
             <h2>📥 Orçamentos e Pedidos Enviados por Clientes <span class="count-note" id="pedidos-count"></span></h2>
@@ -710,13 +710,11 @@
 
         if (user) {
             loginBtn.style.display = 'none';
-            document.getElementById('tab-pedidos-btn').style.display = 'block';
             document.getElementById('tab-servicos-btn').style.display = 'block';
             document.getElementById('tab-relatorios-btn').style.display = 'block';
             statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
         } else {
             loginBtn.style.display = 'block';
-            document.getElementById('tab-pedidos-btn').style.display = 'none';
             document.getElementById('tab-servicos-btn').style.display = 'none';
             document.getElementById('tab-relatorios-btn').style.display = 'none';
             statusArea.innerHTML = `<span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>`;
@@ -1571,11 +1569,15 @@
             tdStatus.appendChild(montarChecklist(item));
 
             const tdAcoes = document.createElement('td');
-            const btnDel = document.createElement('button');
-            btnDel.className = 'btn-del';
-            btnDel.textContent = 'Remover';
-            btnDel.onclick = function() { deletarBD('vendas', item.id); };
-            tdAcoes.appendChild(btnDel);
+            if (auth.currentUser) {
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn-del';
+                btnDel.textContent = 'Remover';
+                btnDel.onclick = function() { deletarBD('vendas', item.id); };
+                tdAcoes.appendChild(btnDel);
+            } else {
+                tdAcoes.innerHTML = '<small style="color:#94a3b8;" title="Entre no Acesso Restrito para excluir pedidos">🔒 Exclusão restrita</small>';
+            }
 
             tr.appendChild(tdData);
             tr.appendChild(tdCliente);
