@@ -203,13 +203,21 @@
         .pdv-col .row { gap: 8px; }
         .pdv-col button { padding: 9px; font-size: 13px; border-radius: 7px; }
         .pdv-scroll { overflow-y: auto; flex: 1; min-height: 0; }
-        .pdv-footer { flex-shrink: 0; margin-top: 8px; }
+        .pdv-footer { flex-shrink: 0; margin-top: 8px; position: sticky; bottom: 0; background: var(--card-bg); padding-top: 4px; }
         .pdv-acabamentos-lista { max-height: 90px; overflow-y: auto; }
         .pdv-acabamentos-lista .checkbox-item { font-size: 12px; margin-bottom: 5px; padding: 2px 0; }
         .pdv-acabamentos-lista .checkbox-item input { width: 14px; height: 14px; }
-        .pdv-resumo-scroll { overflow-y: auto; flex: 1; min-height: 0; font-size: 12.5px; }
-        .pdv-resumo-scroll .receipt-row { font-size: 12.5px; margin-bottom: 6px; }
-        .pdv-resumo-scroll .total-box { font-size: 15px; padding: 10px 12px; margin-top: 10px; }
+        .pdv-resumo-scroll { display: none; } /* Resumo detalhado removido: os itens já aparecem na coluna central */
+        .pdv-mini-resumo {
+            flex-shrink: 0; background: #faf8f2; border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 10px; margin-top: 8px; font-size: 12.5px;
+        }
+        .pdv-mini-resumo .mr-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px; }
+        .pdv-mini-resumo .mr-row:last-child { margin-bottom: 0; }
+        .pdv-mini-resumo .mr-total {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px;
+            border-top: 1px dashed var(--border); font-size: 16px; font-weight: 700; color: var(--primary);
+        }
         .pdv-codigo-input { font-size: 16px !important; font-weight: 700; letter-spacing: 1px; text-align: center; }
         .pdv-codigo-feedback { font-size: 11px !important; min-height: 16px; }
         .pdv-btn-add { background: var(--accent); font-size: 14px !important; padding: 10px !important; }
@@ -428,9 +436,11 @@
                     <textarea id="pdv-observacao" rows="2" placeholder="Ex: entregar após as 14h..."></textarea>
                 </div>
 
-                <div class="pdv-section-label">🧾 Resumo</div>
-                <div class="pdv-resumo-scroll receipt" id="pdv-recibo">
-                    <div id="pdv-recibo-conteudo" style="text-align:center; padding-top:30px; color:#94a3b8; font-size:12.5px;">Adicione itens à venda.</div>
+                <!-- Mini-resumo compacto: os itens detalhados já aparecem na coluna central -->
+                <div class="pdv-mini-resumo" id="pdv-mini-resumo" style="display:none;">
+                    <div class="mr-row"><span>🧺 Itens:</span><strong id="pdv-mini-itens">0</strong></div>
+                    <div class="mr-row" id="pdv-mini-pag-row"><span>💳 Pagamento:</span><strong id="pdv-mini-pag">—</strong></div>
+                    <div class="mr-total"><span>TOTAL:</span><span id="pdv-mini-total">R$ 0,00</span></div>
                 </div>
 
                 <div class="pdv-footer">
@@ -1443,54 +1453,36 @@
         atualizarResumoPDV();
     }
 
-    // Atualiza o painel "Resumo da Venda" sempre que o carrinho ou o pagamento mudam
+    // Atualiza o mini-resumo compacto sempre que o carrinho ou o pagamento mudam.
+    // Os itens detalhados já aparecem na coluna central, então aqui mostramos apenas
+    // a quantidade de itens, a forma de pagamento e o total — mantendo o botão
+    // "Registrar Venda" sempre visível no rodapé da coluna.
     function atualizarResumoPDV() {
-        const box = document.getElementById('pdv-recibo-conteudo');
+        const mini = document.getElementById('pdv-mini-resumo');
+        if (!mini) return;
+
         if (carrinhoPDV.length === 0) {
-            box.innerHTML = '<div style="text-align:center;padding-top:30px;color:#94a3b8;font-size:12.5px;">Adicione itens à venda.</div>';
+            mini.style.display = 'none';
             return;
         }
+        mini.style.display = 'block';
 
         const total = totalCarrinhoPDV();
         const tipoPag = document.getElementById('pdv-pagamento-tipo').value;
         const sinal = parseFloat(document.getElementById('pdv-valor-sinal').value) || 0;
-        const cliente = document.getElementById('pdv-cliente').value.trim() || 'Cliente Balcão';
-        const telefone = document.getElementById('pdv-tel').value.trim() || '—';
-        const statusEscolhido = document.getElementById('pdv-status').value;
-        const observacao = document.getElementById('pdv-observacao').value.trim();
 
-        const itensHtml = carrinhoPDV.map((it, idx) => `
-            <div class="receipt-row" style="align-items:flex-start;">
-                <strong style="min-width:26px;">${idx + 1}.</strong>
-                <span style="flex:1;">${it.codigoServico ? '[' + it.codigoServico + '] ' : ''}${it.servico} — <small>${it.medidas} · ${it.qtd}x${it.acabamentos.length ? ' · ' + it.acabamentos.map(a => a.nome).join(', ') : ''}</small></span>
-                <span style="white-space:nowrap;">R$ ${fmtMoeda(it.total)}</span>
-            </div>
-        `).join('');
+        document.getElementById('pdv-mini-itens').textContent =
+            carrinhoPDV.length + (carrinhoPDV.length === 1 ? ' item' : ' itens');
 
-        let pagamentoHtml = '';
+        let pagTxt = '💵 Total agora';
         if (tipoPag === 'parcial') {
             const restante = Math.max(0, total - sinal);
-            pagamentoHtml = `
-                <div class="receipt-row"><strong>Pagamento:</strong> <span>💰 Sinal de R$ ${fmtMoeda(sinal)}</span></div>
-                <div class="receipt-row" style="color:var(--warning);"><strong>Restante na entrega:</strong> <span><strong>R$ ${fmtMoeda(restante)}</strong></span></div>
-            `;
+            pagTxt = '💰 Sinal R$ ' + fmtMoeda(sinal) + ' · resta R$ ' + fmtMoeda(restante);
         } else if (tipoPag === 'entrega') {
-            pagamentoHtml = `<div class="receipt-row"><strong>Pagamento:</strong> <span>📦 Tudo na entrega (R$ ${fmtMoeda(total)})</span></div>`;
-        } else {
-            pagamentoHtml = `<div class="receipt-row"><strong>Pagamento:</strong> <span>💵 Total pago agora</span></div>`;
+            pagTxt = '📦 Tudo na entrega';
         }
-
-        box.innerHTML = `
-            <div class="receipt-header" style="margin-bottom:10px; padding-bottom:8px;"><h3 style="font-size:13px;">Venda de Balcão</h3><p style="font-size:10px;">Conferência antes de registrar</p></div>
-            <div class="receipt-row"><strong>Cliente:</strong> <span>${cliente}</span></div>
-            <div class="receipt-row"><strong>Telefone:</strong> <span>${telefone}</span></div>
-            <div class="receipt-row"><strong>Itens:</strong> <span>${carrinhoPDV.length}</span></div>
-            ${itensHtml}
-            ${pagamentoHtml}
-            <div class="receipt-row"><strong>Situação:</strong> <span>${STATUS_ROTULO[statusEscolhido]}</span></div>
-            ${observacao ? `<div class="receipt-row" style="align-items:flex-start;"><strong>📝 Obs:</strong> <span style="text-align:right; white-space:pre-wrap;">${observacao}</span></div>` : ''}
-            <div class="total-box"><span>TOTAL:</span><span>R$ ${fmtMoeda(total)}</span></div>
-        `;
+        document.getElementById('pdv-mini-pag').textContent = pagTxt;
+        document.getElementById('pdv-mini-total').textContent = 'R$ ' + fmtMoeda(total);
     }
 
     window.registrarVendaPDV = async function() {
