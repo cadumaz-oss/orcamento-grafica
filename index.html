@@ -453,7 +453,7 @@
                     <select id="pdv-status">
                         <option value="finalizado" selected>✅ Já entregue</option>
                         <option value="andamento">⏳ Em produção</option>
-                        <option value="recebido">📥 Recebido</option>
+                        <option value="recebido">📥 Aberto/Novo</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -508,7 +508,7 @@
                     <label>Status de acompanhamento</label>
                     <select id="filtro-pedidos-status">
                         <option value="todos">Todos os status</option>
-                        <option value="recebido">Recebido</option>
+                        <option value="recebido">Aberto/Novo</option>
                         <option value="andamento">Em Andamento</option>
                         <option value="finalizado">Finalizado</option>
                     </select>
@@ -726,7 +726,7 @@
                     <label>Status</label>
                     <select id="filtro-relatorio-status">
                         <option value="todos">Todos os status</option>
-                        <option value="recebido">Recebido</option>
+                        <option value="recebido">Aberto/Novo</option>
                         <option value="andamento">Em Andamento</option>
                         <option value="finalizado">Finalizado</option>
                     </select>
@@ -760,7 +760,7 @@
 
             <!-- Totais por status -->
             <div class="report-grid">
-                <div class="report-box"><h3>📥 Recebidos</h3><p id="rep-qtd-recebido">0</p><span class="count-note" id="rep-val-recebido">R$ 0,00</span></div>
+                <div class="report-box"><h3>📥 Abertos / Novos</h3><p id="rep-qtd-recebido">0</p><span class="count-note" id="rep-val-recebido">R$ 0,00</span></div>
                 <div class="report-box"><h3>⏳ Em Andamento</h3><p id="rep-qtd-andamento">0</p><span class="count-note" id="rep-val-andamento">R$ 0,00</span></div>
                 <div class="report-box"><h3>✅ Finalizados</h3><p id="rep-qtd-finalizado">0</p><span class="count-note" id="rep-val-finalizado">R$ 0,00</span></div>
             </div>
@@ -775,7 +775,7 @@
             <h2 style="margin-top: 26px;">🧾 Detalhamento dos Pedidos no Período</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pagamento</th><th>Status Atual</th><th>Recebido em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
+            <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pagamento</th><th>Status Atual</th><th>Aberto/Novo em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
                     <tbody id="lista-relatorio"></tbody>
                 </table>
             </div>
@@ -909,7 +909,7 @@
 
     // ===== Constantes e utilitários de acompanhamento =====
     const STATUS_ORDEM = ['recebido', 'andamento', 'finalizado'];
-    const STATUS_ROTULO = { recebido: 'Recebido', andamento: 'Em Andamento', finalizado: 'Finalizado' };
+    const STATUS_ROTULO = { recebido: 'Aberto/Novo', andamento: 'Em Andamento', finalizado: 'Finalizado' };
 
     function statusDoPedido(item) {
         // Pedidos antigos (sem o campo status) são tratados como "recebido" — sem alterar o documento original
