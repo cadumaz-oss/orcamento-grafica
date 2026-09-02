@@ -292,6 +292,8 @@
         .comp-head { text-align: center; border-bottom: 2px dashed #b8860b; padding-bottom: 14px; margin-bottom: 18px; }
         .comp-head h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; margin-bottom: 4px; }
         .comp-head p { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #6b7280; }
+        .comp-company { margin-top: 10px; color: #4b5563; font-size: 12px; line-height: 1.55; letter-spacing: 0; text-transform: none; }
+        .comp-company strong { color: #1a2332; }
         .comp-row { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 10px; font-size: 15px; }
         .comp-row strong { min-width: 130px; }
         .comp-total { margin-top: 18px; background: #f3ecd9; border-left: 5px solid #b8860b; padding: 14px 16px; font-size: 19px; font-weight: 700; display: flex; justify-content: space-between; border-radius: 8px; }
@@ -560,15 +562,29 @@
         <div class="card">
             <h2>🏪 Identidade da Gráfica (Nome no Cabeçalho)</h2>
             <div class="form-group">
-                <label>Nome da Gráfica (exibido no topo do portal)</label>
+                <label>Nome da Empresa / Gráfica</label>
                 <input type="text" id="cfg-nome-grafica" placeholder="Ex: Gráfica Rápida Silva">
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>CNPJ</label>
+                    <input type="text" id="cfg-cnpj-empresa" placeholder="00.000.000/0000-00" inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" id="cfg-telefone-empresa" placeholder="(00) 00000-0000" inputmode="tel">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço</label>
+                <input type="text" id="cfg-endereco-empresa" placeholder="Rua, número, bairro, cidade - UF">
             </div>
             <div class="form-group">
                 <label>Subtítulo do Portal (texto abaixo do nome)</label>
                 <input type="text" id="cfg-subtitulo-grafica" placeholder="Ex: Portal Público & Sistema de Gestão Interna">
             </div>
-            <button onclick="salvarConfigGrafica()">Salvar Nome da Gráfica</button>
-            <p class="count-note" style="margin-top:10px;">O nome salvo aqui aparece automaticamente no cabeçalho para todos os visitantes do portal.</p>
+            <button onclick="salvarConfigGrafica()">Salvar Dados da Empresa</button>
+            <p class="count-note" style="margin-top:10px;">O nome aparece no cabeçalho. CNPJ, endereço e telefone aparecem nos comprovantes impressos.</p>
         </div>
         <div class="card">
             <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
@@ -793,40 +809,70 @@
     let cacheServicos = {};
     let orcamentoAtual = null;
     let base64LogoData = "";
-    let cachePedidos = []; // cache local dos pedidos para filtros e relatórios
-    const PDV_SERVICO_VARIAVEL = '__servico_avulso__';
+        let cachePedidos = []; // cache local dos pedidos para filtros e relatórios
+        const PDV_SERVICO_VARIAVEL = '__servico_avulso__';
+        let identidadeEmpresa = { nome: '', subtitulo: '', cnpj: '', endereco: '', telefone: '' };
 
-    // ===== CONFIGURAÇÃO DA IDENTIDADE DA GRÁFICA (nome no cabeçalho) =====
-    const CONFIG_DOC_REF = doc(db, "configuracoes", "identidade");
+        // ===== CONFIGURAÇÃO DA IDENTIDADE E DOS DADOS DA EMPRESA =====
+        const CONFIG_DOC_REF = doc(db, "configuracoes", "identidade");
 
-    function aplicarIdentidadeHeader(nome, subtitulo) {
-        document.getElementById('header-nome-grafica').textContent = nome || 'Sua Gráfica Express';
-        document.getElementById('header-subtitulo-grafica').textContent = subtitulo || 'Portal Público & Sistema de Gestão Interna';
-        document.title = 'Portal de Orçamentos & Gestão - ' + (nome || 'Gráfica');
-    }
+        function escapeHtml(valor = '') {
+            return String(valor).replace(/[&<>"']/g, caractere => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[caractere]));
+        }
+
+        function aplicarIdentidadeHeader(nome, subtitulo, cnpj, endereco, telefone) {
+            identidadeEmpresa = { nome: nome || '', subtitulo: subtitulo || '', cnpj: cnpj || '', endereco: endereco || '', telefone: telefone || '' };
+            document.getElementById('header-nome-grafica').textContent = nome || 'Sua Gráfica Express';
+            document.getElementById('header-subtitulo-grafica').textContent = subtitulo || 'Portal Público & Sistema de Gestão Interna';
+            document.title = 'Portal de Orçamentos & Gestão - ' + (nome || 'Gráfica');
+        }
+
+        function dadosEmpresaComprovanteHtml() {
+            const linhas = [
+                identidadeEmpresa.cnpj ? `<div><strong>CNPJ:</strong> ${escapeHtml(identidadeEmpresa.cnpj)}</div>` : '',
+                identidadeEmpresa.endereco ? `<div><strong>Endereço:</strong> ${escapeHtml(identidadeEmpresa.endereco)}</div>` : '',
+                identidadeEmpresa.telefone ? `<div><strong>Telefone:</strong> ${escapeHtml(identidadeEmpresa.telefone)}</div>` : ''
+            ].filter(Boolean).join('');
+            return linhas ? `<div class="comp-company">${linhas}</div>` : '';
+        }
 
     // Escuta em tempo real: qualquer alteração no nome reflete no cabeçalho de todos os visitantes
-    onSnapshot(CONFIG_DOC_REF, (snap) => {
-        if (snap.exists()) {
-            const cfg = snap.data();
-            aplicarIdentidadeHeader(cfg.nome, cfg.subtitulo);
-            const campoNome = document.getElementById('cfg-nome-grafica');
-            const campoSub = document.getElementById('cfg-subtitulo-grafica');
-            if (campoNome && document.activeElement !== campoNome) campoNome.value = cfg.nome || '';
-            if (campoSub && document.activeElement !== campoSub) campoSub.value = cfg.subtitulo || '';
-        }
-    });
+        onSnapshot(CONFIG_DOC_REF, (snap) => {
+            if (snap.exists()) {
+                const cfg = snap.data();
+                aplicarIdentidadeHeader(cfg.nome, cfg.subtitulo, cfg.cnpj, cfg.endereco, cfg.telefone);
+                const campoNome = document.getElementById('cfg-nome-grafica');
+                const campoSub = document.getElementById('cfg-subtitulo-grafica');
+                const campoCnpj = document.getElementById('cfg-cnpj-empresa');
+                const campoEndereco = document.getElementById('cfg-endereco-empresa');
+                const campoTelefone = document.getElementById('cfg-telefone-empresa');
+                if (campoNome && document.activeElement !== campoNome) campoNome.value = cfg.nome || '';
+                if (campoSub && document.activeElement !== campoSub) campoSub.value = cfg.subtitulo || '';
+                if (campoCnpj && document.activeElement !== campoCnpj) campoCnpj.value = cfg.cnpj || '';
+                if (campoEndereco && document.activeElement !== campoEndereco) campoEndereco.value = cfg.endereco || '';
+                if (campoTelefone && document.activeElement !== campoTelefone) campoTelefone.value = cfg.telefone || '';
+            }
+        });
 
-    window.salvarConfigGrafica = async function() {
-        const nome = document.getElementById('cfg-nome-grafica').value.trim();
-        const subtitulo = document.getElementById('cfg-subtitulo-grafica').value.trim();
-        if (!nome) { alert("Informe o nome da gráfica antes de salvar."); return; }
-        try {
-            await setDoc(CONFIG_DOC_REF, { nome: nome, subtitulo: subtitulo, atualizadoEm: Date.now() });
-            alert("Nome da gráfica atualizado com sucesso!");
-        } catch (e) {
-            alert("Não foi possível salvar a configuração. Verifique sua conexão.");
-        }
+        window.salvarConfigGrafica = async function() {
+            const nome = document.getElementById('cfg-nome-grafica').value.trim();
+            const subtitulo = document.getElementById('cfg-subtitulo-grafica').value.trim();
+            const cnpj = document.getElementById('cfg-cnpj-empresa').value.trim();
+            const endereco = document.getElementById('cfg-endereco-empresa').value.trim();
+            const telefone = document.getElementById('cfg-telefone-empresa').value.trim();
+            if (!nome) { alert("Informe o nome da gráfica antes de salvar."); return; }
+            try {
+                await setDoc(CONFIG_DOC_REF, { nome, subtitulo, cnpj, endereco, telefone, atualizadoEm: Date.now() }, { merge: true });
+                alert("Dados da empresa atualizados com sucesso!");
+            } catch (e) {
+                alert("Não foi possível salvar a configuração. Verifique sua conexão.");
+            }
     }
 
     // ===== ATIVAÇÃO/DESATIVAÇÃO DAS GUIAS PÚBLICAS (checklist da área restrita) =====
@@ -1662,6 +1708,7 @@
     function montarComprovanteVendaPDV(venda) {
         const nomeGrafica = document.getElementById('header-nome-grafica').textContent;
         const subtituloGrafica = document.getElementById('header-subtitulo-grafica').textContent;
+        const dadosEmpresa = dadosEmpresaComprovanteHtml();
         const dataHoraVenda = new Date().toLocaleString('pt-BR');
 
         const itensHtml = (venda.itens || []).map((it, idx) => `
@@ -1688,8 +1735,9 @@
         document.getElementById('area-impressao-comprovante').innerHTML = `
             <div class="comp-wrap">
                 <div class="comp-head">
-                    <h1>${nomeGrafica}</h1>
-                    <p>${subtituloGrafica}</p>
+                    <h1>${escapeHtml(nomeGrafica)}</h1>
+                    <p>${escapeHtml(subtituloGrafica)}</p>
+                    ${dadosEmpresa}
                     <p style="margin-top:8px; font-weight:700; color:#1a2332;">COMPROVANTE DE VENDA — BALCÃO (PDV)</p>
                 </div>
                 <div class="comp-row"><strong>Data da Venda:</strong> <span>${dataHoraVenda}</span></div>
@@ -2496,6 +2544,7 @@
     function montarComprovanteEnvio(pedido) {
         const nomeGrafica = document.getElementById('header-nome-grafica').textContent;
         const subtituloGrafica = document.getElementById('header-subtitulo-grafica').textContent;
+        const dadosEmpresa = dadosEmpresaComprovanteHtml();
         const dataHoraEnvio = new Date().toLocaleString('pt-BR');
         const visualLogo = pedido.logo ? `<div style="text-align:center;margin:12px 0;"><img src="${pedido.logo}" style="max-height:90px;border:1px solid #cbd5e1;padding:3px;border-radius:6px;"></div>` : '';
         const acabamentosTexto = pedido.acabamentos && pedido.acabamentos.length
@@ -2505,8 +2554,9 @@
         document.getElementById('area-impressao-comprovante').innerHTML = `
             <div class="comp-wrap">
                 <div class="comp-head">
-                    <h1>${nomeGrafica}</h1>
-                    <p>${subtituloGrafica}</p>
+                    <h1>${escapeHtml(nomeGrafica)}</h1>
+                    <p>${escapeHtml(subtituloGrafica)}</p>
+                    ${dadosEmpresa}
                     <p style="margin-top:8px; font-weight:700; color:#1a2332;">COMPROVANTE DE ENVIO DE PEDIDO</p>
                 </div>
                 <div class="comp-row"><strong>Data de Envio:</strong> <span>${dataHoraEnvio}</span></div>
