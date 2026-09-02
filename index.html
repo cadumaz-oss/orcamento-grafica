@@ -309,8 +309,6 @@
         .comp-qr { min-height: 150px; display: flex; align-items: center; justify-content: center; margin: 8px auto; }
         .comp-qr img, .comp-qr canvas { display: block; margin: 0 auto; width: 150px !important; height: 150px !important; }
         .comp-qr table { margin: 0 auto; border-collapse: collapse; }
-        .comp-track-url { display: block; max-width: 100%; overflow-wrap: anywhere; color: #6b7280; font-size: 9px; line-height: 1.35; }
-
         /* ===== TELA PÚBLICA EXCLUSIVA DE ACOMPANHAMENTO ===== */
         #modo-acompanhamento { display: none; min-height: 100vh; padding: 32px 18px; }
         body.modo-acompanhamento { padding: 0; background: #f6f4ef; }
@@ -1043,7 +1041,6 @@
                 <strong>Acompanhe o andamento do seu serviço</strong>
                 <p>Aponte a câmera do celular para o QR code. Esta página mostra somente o status deste pedido.</p>
                 <div id="qr-code-comprovante" class="comp-qr" aria-label="QR code para acompanhar o andamento"></div>
-                <span class="comp-track-url">${escapeHtml(link)}</span>
             </div>
         `;
     }
