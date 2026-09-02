@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal de Orçamentos & Gestão - Gráfica Rápida</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,6 +299,57 @@
         .comp-row strong { min-width: 130px; }
         .comp-total { margin-top: 18px; background: #f3ecd9; border-left: 5px solid #b8860b; padding: 14px 16px; font-size: 19px; font-weight: 700; display: flex; justify-content: space-between; border-radius: 8px; }
         .comp-foot { margin-top: 22px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e3ddd0; padding-top: 12px; }
+
+        .comp-track-box {
+            margin: 22px auto 0; padding: 16px 14px 12px; text-align: center;
+            border: 1px dashed #c9bfa4; border-radius: 10px; background: #fffdf7;
+        }
+        .comp-track-box strong { display: block; color: #1a2332; font-size: 13px; margin-bottom: 4px; }
+        .comp-track-box p { margin: 0 0 10px; color: #6b7280; font-size: 11.5px; line-height: 1.45; }
+        .comp-qr { min-height: 150px; display: flex; align-items: center; justify-content: center; margin: 8px auto; }
+        .comp-qr img, .comp-qr canvas { display: block; margin: 0 auto; width: 150px !important; height: 150px !important; }
+        .comp-qr table { margin: 0 auto; border-collapse: collapse; }
+        .comp-track-url { display: block; max-width: 100%; overflow-wrap: anywhere; color: #6b7280; font-size: 9px; line-height: 1.35; }
+
+        /* ===== TELA PÚBLICA EXCLUSIVA DE ACOMPANHAMENTO ===== */
+        #modo-acompanhamento { display: none; min-height: 100vh; padding: 32px 18px; }
+        body.modo-acompanhamento { padding: 0; background: #f6f4ef; }
+        body.modo-acompanhamento .container,
+        body.modo-acompanhamento #area-impressao-comprovante { display: none !important; }
+        body.modo-acompanhamento #modo-acompanhamento { display: block !important; }
+        .tracking-card {
+            width: min(100%, 620px); margin: 0 auto; background: #fff; border: 1px solid #e3ddd0;
+            border-top: 4px solid #b8860b; border-radius: 16px; box-shadow: 0 16px 40px -18px rgba(26,35,50,0.28);
+            padding: 28px 26px 26px; color: #1a2332;
+        }
+        .tracking-brand { text-align: center; padding-bottom: 18px; border-bottom: 1px solid #e3ddd0; }
+        .tracking-brand h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; margin-bottom: 5px; }
+        .tracking-brand p { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; }
+        .tracking-kicker { color: #b8860b; font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; margin-top: 24px; }
+        .tracking-card h2 { margin: 7px 0 5px; padding: 0; border: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 24px; }
+        .tracking-service { color: #6b7280; font-size: 14px; margin-bottom: 18px; }
+        .tracking-status-box { background: #fdf8e7; border: 1px solid #e5d9b8; border-radius: 11px; padding: 16px; }
+        .tracking-status-box .tracking-label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; }
+        .tracking-status-box strong { display: block; margin-top: 5px; color: #1a2332; font-size: 22px; }
+        .tracking-status-box p { margin-top: 4px; color: #6b7280; font-size: 12px; }
+        .tracking-timeline { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+        .tracking-step { display: grid; grid-template-columns: 30px 1fr; gap: 11px; align-items: start; position: relative; }
+        .tracking-step:not(:last-child)::after { content: ''; position: absolute; left: 14px; top: 29px; bottom: -14px; width: 2px; background: #e3ddd0; }
+        .tracking-step.done:not(:last-child)::after, .tracking-step.current:not(:last-child)::after { background: #d4af37; }
+        .tracking-dot { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f3f0e8; border: 2px solid #d8cfb8; color: #8b7a4d; font-size: 13px; font-weight: 700; z-index: 1; }
+        .tracking-step.done .tracking-dot { background: #dff0ee; border-color: #0f766e; color: #0f766e; }
+        .tracking-step.current .tracking-dot { background: #b8860b; border-color: #b8860b; color: #fff; box-shadow: 0 0 0 4px rgba(184,134,11,.14); }
+        .tracking-step-title { display: block; padding-top: 3px; color: #6b7280; font-size: 14px; font-weight: 600; }
+        .tracking-step.done .tracking-step-title, .tracking-step.current .tracking-step-title { color: #1a2332; }
+        .tracking-step-time { display: block; margin-top: 3px; color: #94a3b8; font-size: 11px; font-weight: 400; }
+        .tracking-foot { margin-top: 26px; padding-top: 14px; border-top: 1px solid #e3ddd0; color: #6b7280; font-size: 11.5px; line-height: 1.5; text-align: center; }
+        .tracking-state { padding: 38px 8px 20px; color: #6b7280; font-size: 14px; text-align: center; line-height: 1.6; }
+        .tracking-state.error { color: #b91c1c; }
+        @media (max-width: 480px) {
+            #modo-acompanhamento { padding: 14px 10px; }
+            .tracking-card { padding: 22px 18px 20px; }
+            .tracking-brand h1 { font-size: 22px; }
+        }
     </style>
 </head>
 <body>
@@ -786,11 +838,34 @@
 <!-- ÁREA DE IMPRESSÃO DO COMPROVANTE DO CLIENTE (oculta na tela, usada apenas na impressão) -->
 <div id="area-impressao-comprovante"></div>
 
+<!-- ROTA PÚBLICA: acessada exclusivamente pelo QR code do comprovante -->
+<div id="modo-acompanhamento" aria-live="polite">
+    <main class="tracking-card">
+        <div class="tracking-brand">
+            <h1 id="tracking-nome-grafica">Acompanhamento do serviço</h1>
+            <p id="tracking-subtitulo-grafica">Consulta exclusiva do andamento</p>
+        </div>
+        <div id="tracking-loading" class="tracking-state">Carregando o andamento do seu serviço...</div>
+        <div id="tracking-content" style="display:none;">
+            <div class="tracking-kicker">Acompanhamento exclusivo</div>
+            <h2>Andamento do serviço</h2>
+            <p class="tracking-service" id="tracking-servico"></p>
+            <div class="tracking-status-box">
+                <span class="tracking-label">Status atual</span>
+                <strong id="tracking-status"></strong>
+                <p id="tracking-atualizado"></p>
+            </div>
+            <div class="tracking-timeline" id="tracking-timeline"></div>
+            <div class="tracking-foot">Esta consulta mostra somente o andamento deste serviço. Para falar com a gráfica, use os canais de contato informados no comprovante.</div>
+        </div>
+    </main>
+</div>
+
 <!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // CONFIGURAÇÕES DO FIREBASE CONECTADAS (inalteradas)
     const firebaseConfig = {
@@ -805,6 +880,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const tokenAcompanhamento = new URLSearchParams(window.location.search).get('acompanhar');
+    const modoAcompanhamento = Boolean(tokenAcompanhamento && tokenAcompanhamento.trim());
 
     let cacheServicos = {};
     let orcamentoAtual = null;
@@ -843,7 +920,7 @@
         }
 
     // Escuta em tempo real: qualquer alteração no nome reflete no cabeçalho de todos os visitantes
-        onSnapshot(CONFIG_DOC_REF, (snap) => {
+        if (!modoAcompanhamento) onSnapshot(CONFIG_DOC_REF, (snap) => {
             if (snap.exists()) {
                 const cfg = snap.data();
                 aplicarIdentidadeHeader(cfg.nome, cfg.subtitulo, cfg.cnpj, cfg.endereco, cfg.telefone);
@@ -892,7 +969,7 @@
     }
 
     // Escuta em tempo real: ativar/desativar reflete na hora para todos os visitantes
-    onSnapshot(VISIBILIDADE_DOC_REF, (snap) => {
+    if (!modoAcompanhamento) onSnapshot(VISIBILIDADE_DOC_REF, (snap) => {
         portalClienteAtivo = snap.exists() ? snap.data().portalAtivo !== false : true;
         const chk = document.getElementById('cfg-portal-ativo');
         if (chk) chk.checked = portalClienteAtivo;
@@ -910,6 +987,155 @@
     // ===== Constantes e utilitários de acompanhamento =====
     const STATUS_ORDEM = ['recebido', 'andamento', 'finalizado'];
     const STATUS_ROTULO = { recebido: 'Aberto/Novo', andamento: 'Em Andamento', finalizado: 'Finalizado' };
+
+
+    const STATUS_ACOMPANHAMENTO = {
+        recebido: 'Pedido recebido',
+        andamento: 'Em produção',
+        finalizado: 'Finalizado'
+    };
+
+    function gerarTokenAcompanhamento() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+        const bytes = new Uint8Array(18);
+        if (window.crypto && typeof window.crypto.getRandomValues === 'function') window.crypto.getRandomValues(bytes);
+        else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+        return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function construirLinkAcompanhamento(token) {
+        if (!token) return '';
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        url.searchParams.set('acompanhar', token);
+        return url.toString();
+    }
+
+    function dadosPublicosAcompanhamento(pedido) {
+        const historicoSeguro = historicoDoPedido(pedido)
+            .filter(registro => STATUS_ORDEM.includes(registro.status))
+            .map(registro => ({
+                status: registro.status,
+                timestamp: typeof registro.timestamp === 'number' ? registro.timestamp : null
+            }));
+        return {
+            // Somente estes campos são expostos na coleção pública; não inclui cliente, telefone, valor, arte, observação ou pagamento.
+            servico: pedido.servico || 'Serviço contratado',
+            status: statusDoPedido(pedido),
+            historicoStatus: historicoSeguro,
+            nomeGrafica: identidadeEmpresa.nome || document.getElementById('header-nome-grafica').textContent || 'Gráfica',
+            subtituloGrafica: identidadeEmpresa.subtitulo || document.getElementById('header-subtitulo-grafica').textContent || 'Acompanhamento do serviço',
+            atualizadoEm: Date.now()
+        };
+    }
+
+    async function salvarAcompanhamentoPublico(pedido) {
+        if (!pedido.acompanhamentoToken) return;
+        await setDoc(doc(db, 'acompanhamentos', pedido.acompanhamentoToken), dadosPublicosAcompanhamento(pedido), { merge: true });
+    }
+
+    function blocoQrComprovanteHtml(token) {
+        const link = construirLinkAcompanhamento(token);
+        if (!link) return '';
+        return `
+            <div class="comp-track-box">
+                <strong>Acompanhe o andamento do seu serviço</strong>
+                <p>Aponte a câmera do celular para o QR code. Esta página mostra somente o status deste pedido.</p>
+                <div id="qr-code-comprovante" class="comp-qr" aria-label="QR code para acompanhar o andamento"></div>
+                <span class="comp-track-url">${escapeHtml(link)}</span>
+            </div>
+        `;
+    }
+
+    function gerarQrCodeComprovante(token) {
+        const alvo = document.getElementById('qr-code-comprovante');
+        const link = construirLinkAcompanhamento(token);
+        if (!alvo || !link) return;
+        alvo.innerHTML = '';
+        if (window.QRCode) {
+            new window.QRCode(alvo, {
+                text: link,
+                width: 150,
+                height: 150,
+                colorDark: '#111827',
+                colorLight: '#ffffff',
+                correctLevel: window.QRCode.CorrectLevel.M
+            });
+        } else {
+            alvo.innerHTML = '<span style="color:#b91c1c;font-size:11px;">Não foi possível carregar o QR code. Verifique a conexão e tente imprimir novamente.</span>';
+        }
+    }
+
+    function mostrarErroAcompanhamento(mensagem) {
+        const loading = document.getElementById('tracking-loading');
+        const content = document.getElementById('tracking-content');
+        if (content) content.style.display = 'none';
+        if (loading) {
+            loading.className = 'tracking-state error';
+            loading.textContent = mensagem;
+            loading.style.display = 'block';
+        }
+    }
+
+    function renderizarAcompanhamentoPublico(pedido) {
+        const loading = document.getElementById('tracking-loading');
+        const content = document.getElementById('tracking-content');
+        const status = STATUS_ORDEM.includes(pedido.status) ? pedido.status : 'recebido';
+        const historico = historicoDoPedido({ ...pedido, status });
+        const registroStatus = historico.find(h => h.status === status);
+        const idxAtual = STATUS_ORDEM.indexOf(status);
+
+        document.getElementById('tracking-nome-grafica').textContent = pedido.nomeGrafica || 'Acompanhamento do serviço';
+        document.getElementById('tracking-subtitulo-grafica').textContent = pedido.subtituloGrafica || 'Consulta exclusiva do andamento';
+        document.getElementById('tracking-servico').textContent = pedido.servico || 'Serviço contratado';
+        document.getElementById('tracking-status').textContent = STATUS_ACOMPANHAMENTO[status];
+        document.getElementById('tracking-atualizado').textContent = registroStatus && registroStatus.timestamp
+            ? 'Atualizado em ' + formatarDataHora(registroStatus.timestamp)
+            : 'Aguardando atualização da gráfica';
+
+        const timeline = document.getElementById('tracking-timeline');
+        timeline.innerHTML = '';
+        STATUS_ORDEM.forEach((st, index) => {
+            const etapa = document.createElement('div');
+            etapa.className = 'tracking-step' + (index < idxAtual ? ' done' : '') + (index === idxAtual ? ' current' : '');
+            const dot = document.createElement('span');
+            dot.className = 'tracking-dot';
+            dot.textContent = index < idxAtual ? '✓' : String(index + 1);
+            const texto = document.createElement('div');
+            const titulo = document.createElement('span');
+            titulo.className = 'tracking-step-title';
+            titulo.textContent = STATUS_ACOMPANHAMENTO[st];
+            const registro = historico.find(h => h.status === st);
+            const horario = document.createElement('span');
+            horario.className = 'tracking-step-time';
+            horario.textContent = registro && registro.timestamp ? formatarDataHora(registro.timestamp) : 'Aguardando';
+            texto.appendChild(titulo);
+            texto.appendChild(horario);
+            etapa.appendChild(dot);
+            etapa.appendChild(texto);
+            timeline.appendChild(etapa);
+        });
+
+        loading.style.display = 'none';
+        content.style.display = 'block';
+    }
+
+    function iniciarModoAcompanhamento() {
+        document.body.classList.add('modo-acompanhamento');
+        const area = document.getElementById('modo-acompanhamento');
+        if (area) area.style.display = 'block';
+        onSnapshot(doc(db, 'acompanhamentos', tokenAcompanhamento.trim()), (snap) => {
+            if (!snap.exists()) {
+                mostrarErroAcompanhamento('Este QR code não corresponde a um acompanhamento disponível. Solicite um novo comprovante à gráfica.');
+                return;
+            }
+            renderizarAcompanhamentoPublico(snap.data());
+        }, (error) => {
+            console.error('Falha ao carregar acompanhamento público:', error);
+            mostrarErroAcompanhamento('Não foi possível carregar o andamento agora. Verifique sua conexão e tente novamente.');
+        });
+    }
 
     function statusDoPedido(item) {
         // Pedidos antigos (sem o campo status) são tratados como "recebido" — sem alterar o documento original
@@ -931,6 +1157,9 @@
         const reg = historicoDoPedido(item).find(h => h.status === status);
         return reg ? reg.timestamp : null;
     }
+
+
+    if (modoAcompanhamento) iniciarModoAcompanhamento();
 
     function dentroDoPeriodo(item, inicioId, fimId) {
         const ini = document.getElementById(inicioId).value;
@@ -985,7 +1214,7 @@
         });
     }
 
-    onAuthStateChanged(auth, (user) => {
+    if (!modoAcompanhamento) onAuthStateChanged(auth, (user) => {
         const loginBtn = document.getElementById('tab-login-btn');
         const statusArea = document.getElementById('auth-status-area');
 
@@ -1136,7 +1365,7 @@
     }
 
     // --- SERVIÇOS: LISTAGEM EM TEMPO REAL (inalterada) ---
-    onSnapshot(collection(db, "servicos"), (snap) => {
+    if (!modoAcompanhamento) onSnapshot(collection(db, "servicos"), (snap) => {
         const select = document.getElementById('venda-servico');
         const selectPDV = document.getElementById('pdv-servico');
         const lista = document.getElementById('lista-servicos');
@@ -1282,7 +1511,7 @@
         });
     }
 
-    onSnapshot(collection(db, "acabamentos"), (snap) => {
+    if (!modoAcompanhamento) onSnapshot(collection(db, "acabamentos"), (snap) => {
         const lista = document.getElementById('lista-acabamentos');
         lista.innerHTML = "";
         cacheAcabamentos = {};
@@ -1662,11 +1891,17 @@
             origem: 'pdv',
             status: statusEscolhido,
             historicoStatus: historico,
-            observacao: document.getElementById('pdv-observacao').value.trim()
+            observacao: document.getElementById('pdv-observacao').value.trim(),
+            acompanhamentoToken: gerarTokenAcompanhamento()
         };
 
         try {
-            await addDoc(collection(db, "vendas"), venda);
+            const vendaRef = doc(collection(db, 'vendas'));
+            const acompanhamentoRef = doc(db, 'acompanhamentos', venda.acompanhamentoToken);
+            const batch = writeBatch(db);
+            batch.set(vendaRef, venda);
+            batch.set(acompanhamentoRef, dadosPublicosAcompanhamento(venda));
+            await batch.commit();
         } catch (e) {
             console.error("Falha ao registrar venda PDV:", e);
             alert("Não foi possível registrar a venda. Verifique sua conexão.");
@@ -1748,12 +1983,14 @@
                 ${pagamentoHtml}
                 ${venda.observacao ? `<div class="comp-row" style="align-items:flex-start;"><strong>📝 Observação:</strong> <span style="text-align:right; white-space:pre-wrap;">${venda.observacao}</span></div>` : ''}
                 <div class="comp-total"><span>TOTAL DA VENDA:</span><span>R$ ${fmtMoeda(venda.total)}</span></div>
+                ${blocoQrComprovanteHtml(venda.acompanhamentoToken)}
                 <div class="comp-foot">
                     Este comprovante confirma o registro da venda no balcão.<br>
                     ${pag.restante > 0 ? `O restante de R$ ${fmtMoeda(pag.restante)} deverá ser pago na entrega.` : 'Venda quitada integralmente.'}
                 </div>
             </div>
         `;
+        gerarQrCodeComprovante(venda.acompanhamentoToken);
     }
 
     window.cadastrarAcabamento = async function() {
@@ -1799,6 +2036,16 @@
             await updateDoc(doc(db, "vendas", id), { status: novoStatus, historicoStatus: historico });
         } catch (e) {
             alert("Não foi possível atualizar o status. Verifique sua conexão.");
+            return;
+        }
+
+        // O cliente acompanha apenas este registro sanitizado, nunca a coleção completa de vendas.
+        if (pedido.acompanhamentoToken) {
+            try {
+                await salvarAcompanhamentoPublico({ ...pedido, status: novoStatus, historicoStatus: historico });
+            } catch (e) {
+                console.warn('Status salvo, mas não foi possível sincronizar o acompanhamento público:', e);
+            }
         }
     }
 
@@ -2213,7 +2460,7 @@
     }
 
     // --- PEDIDOS: LISTAGEM EM TEMPO REAL (campos originais preservados) ---
-    onSnapshot(collection(db, "vendas"), (snap) => {
+    if (!modoAcompanhamento) onSnapshot(collection(db, "vendas"), (snap) => {
         cachePedidos = [];
         snap.forEach(d => { cachePedidos.push({id: d.id, ...d.data()}); });
         cachePedidos.sort((a,b) => b.timestamp - a.timestamp);
@@ -2364,7 +2611,7 @@
     }
 
     // Listagem em tempo real das despesas (atualiza a guia e os relatórios)
-    onSnapshot(collection(db, "despesas"), (snap) => {
+    if (!modoAcompanhamento) onSnapshot(collection(db, "despesas"), (snap) => {
         cacheDespesas = [];
         snap.forEach(d => { cacheDespesas.push({id: d.id, ...d.data()}); });
         cacheDespesas.sort((a,b) => b.timestamp - a.timestamp);
@@ -2486,7 +2733,8 @@
             total: totalCusto + totalAdicionais,
             // Campos adicionais de acompanhamento (não substituem nenhum campo existente)
             status: 'recebido',
-            historicoStatus: [{ status: 'recebido', timestamp: Date.now() }]
+            historicoStatus: [{ status: 'recebido', timestamp: Date.now() }],
+            acompanhamentoToken: gerarTokenAcompanhamento()
         };
 
         let visualLogo = base64LogoData ? `<div style="text-align:center;margin-top:10px;"><img src="${base64LogoData}" style="max-height:80px;border:1px solid #cbd5e1;padding:2px;"></div>` : '';
@@ -2512,7 +2760,12 @@
     window.salvarOrcamentoBD = async function() {
         if(!orcamentoAtual) { alert("Por favor, preencha o formulário e clique em 'Calcular Valor' antes de enviar."); return; }
         try {
-            await addDoc(collection(db, "vendas"), orcamentoAtual);
+            const vendaRef = doc(collection(db, 'vendas'));
+            const acompanhamentoRef = doc(db, 'acompanhamentos', orcamentoAtual.acompanhamentoToken);
+            const batch = writeBatch(db);
+            batch.set(vendaRef, orcamentoAtual);
+            batch.set(acompanhamentoRef, dadosPublicosAcompanhamento(orcamentoAtual));
+            await batch.commit();
         } catch (e) {
             console.error("Falha ao enviar pedido:", e);
             alert("Não foi possível enviar o pedido. Se você anexou uma arte, tente uma imagem menor. Caso contrário, verifique sua conexão e tente novamente.");
@@ -2569,12 +2822,14 @@
                 <div class="comp-row"><strong>Situação:</strong> <span>Enviado para aprovação da gráfica</span></div>
                 ${visualLogo}
                 <div class="comp-total"><span>VALOR ESTIMADO:</span><span>R$ ${fmtMoeda(pedido.total)}</span></div>
+                ${blocoQrComprovanteHtml(pedido.acompanhamentoToken)}
                 <div class="comp-foot">
                     Este comprovante confirma o envio do pedido de orçamento.<br>
                     O valor final será confirmado pela equipe da gráfica após análise da arte.
                 </div>
             </div>
         `;
+        gerarQrCodeComprovante(pedido.acompanhamentoToken);
     }
 
     window.imprimirComprovante = function() {
