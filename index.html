@@ -179,17 +179,20 @@
             padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 700; color: var(--primary);
         }
 
-        /* ===== LAYOUT PDV COMPACTO — SEM ROLAGEM ===== */
+        /* ===== LAYOUT PDV COMPACTO — COM ROLAGEM NO DESKTOP ===== */
         #section-pdv { display: none; }
-        #section-pdv.pdv-ativo { display: flex; flex-direction: column; height: calc(100vh - 207px); min-height: 520px; }
+        #section-pdv.pdv-ativo {
+            display: flex; flex-direction: column; height: calc(100vh - 207px); min-height: 0;
+            overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable;
+        }
         .pdv-grid {
             display: grid; grid-template-columns: 340px 1fr 320px; gap: 12px;
-            flex: 1; min-height: 0; overflow: hidden;
+            flex: 0 0 auto; min-height: max-content; overflow: visible;
         }
         .pdv-col {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
             box-shadow: var(--shadow); padding: 14px; display: flex; flex-direction: column;
-            overflow: hidden; min-height: 0;
+            overflow: visible; min-height: 0;
         }
         .pdv-col h3 {
             font-family: 'Playfair Display', Georgia, serif; font-size: 14px; color: var(--primary);
@@ -231,8 +234,17 @@
             color: var(--text-soft); margin: 10px 0 6px; flex-shrink: 0;
         }
         @media (max-width: 1100px) {
-            .pdv-grid { grid-template-columns: 1fr; overflow-y: auto; }
-            #section-pdv.pdv-ativo { height: auto; }
+            body.pdv-modo-compacto { overflow: auto; }
+            .pdv-grid { grid-template-columns: 1fr; overflow: visible; }
+            #section-pdv.pdv-ativo { height: auto; min-height: 0; overflow: visible; }
+        }
+
+        /* A rolagem fica no painel do PDV no desktop, sem mover o cabeçalho e as abas. */
+        @media (min-width: 1101px) {
+            #section-pdv.pdv-ativo::-webkit-scrollbar { width: 11px; }
+            #section-pdv.pdv-ativo::-webkit-scrollbar-track { background: #eee9de; border-radius: 10px; }
+            #section-pdv.pdv-ativo::-webkit-scrollbar-thumb { background: #c5b88f; border: 3px solid #eee9de; border-radius: 10px; }
+            #section-pdv.pdv-ativo::-webkit-scrollbar-thumb:hover { background: var(--accent); }
         }
 
         /* ===== MODO COMPACTO DO BODY QUANDO PDV ATIVO ===== */
@@ -380,6 +392,17 @@
                 <div class="form-group">
                     <label>Serviço</label>
                     <select id="pdv-servico" required><option value="">Carregando serviços...</option></select>
+                </div>
+                <div id="pdv-servico-variavel-container" style="display:none; background:#fdf8e7; padding:10px; border:1px dashed var(--accent-soft); border-radius:8px;">
+                    <div class="form-group">
+                        <label>Descrição do serviço avulso</label>
+                        <textarea id="pdv-servico-variavel-descricao" rows="2" placeholder="Ex: Instalação de banner no endereço do cliente"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Valor unitário do serviço (R$)</label>
+                        <input type="number" id="pdv-servico-variavel-valor" step="0.01" min="0.01" placeholder="Ex: 150,00">
+                        <p class="count-note" style="margin-top:5px;">O valor será multiplicado pela quantidade informada.</p>
+                    </div>
                 </div>
                 <div id="pdv-dimensoes-container">
                     <div class="row form-group">
@@ -771,6 +794,7 @@
     let orcamentoAtual = null;
     let base64LogoData = "";
     let cachePedidos = []; // cache local dos pedidos para filtros e relatórios
+    const PDV_SERVICO_VARIAVEL = '__servico_avulso__';
 
     // ===== CONFIGURAÇÃO DA IDENTIDADE DA GRÁFICA (nome no cabeçalho) =====
     const CONFIG_DOC_REF = doc(db, "configuracoes", "identidade");
@@ -1166,6 +1190,13 @@
 
             lista.appendChild(tr);
         });
+
+        // Opção exclusiva do PDV para lançar um serviço não cadastrado,
+        // com descrição e valor informados no momento da venda.
+        const optVariavel = document.createElement('option');
+        optVariavel.value = PDV_SERVICO_VARIAVEL;
+        optVariavel.textContent = '✏️ Serviço avulso — descrição e valor variável';
+        selectPDV.appendChild(optVariavel);
     });
 
     // ===== ACABAMENTOS ADICIONAIS: CADASTRO E LISTAGEM EM TEMPO REAL =====
@@ -1278,9 +1309,23 @@
 
     // Mostra/oculta dimensões e atualiza os acabamentos conforme o serviço escolhido no PDV
     document.getElementById('pdv-servico').addEventListener('change', function() {
+        const servicoVariavel = this.value === PDV_SERVICO_VARIAVEL;
         const s = cacheServicos[this.value];
-        document.getElementById('pdv-dimensoes-container').style.display = (s && s.tipo === 'unidade') ? 'none' : 'block';
-        renderizarAcabamentosServico(this.value, document.getElementById('pdv-acabamentos-container'), 'acabamento-check-pdv');
+        const dimensoes = document.getElementById('pdv-dimensoes-container');
+        const camposVariaveis = document.getElementById('pdv-servico-variavel-container');
+        const acabamentos = document.getElementById('pdv-acabamentos-container');
+
+        dimensoes.style.display = !servicoVariavel && (!s || s.tipo !== 'unidade') ? 'block' : 'none';
+        camposVariaveis.style.display = servicoVariavel ? 'block' : 'none';
+
+        if (servicoVariavel) {
+            // Acabamentos cadastrados não se aplicam automaticamente a um serviço avulso.
+            document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
+            acabamentos.innerHTML = '<div style="color:#94a3b8; font-size:12px;">Acabamentos não disponíveis para serviço avulso.</div>';
+            document.getElementById('pdv-servico-variavel-descricao').focus();
+        } else {
+            renderizarAcabamentosServico(this.value, acabamentos, 'acabamento-check-pdv');
+        }
     });
 
     // ===== LANÇAMENTO POR CÓDIGO NO PDV =====
@@ -1357,30 +1402,63 @@
         if (!servicoId) { alert("Selecione o serviço vendido para adicionar o item."); return; }
         if (quantidade < 1) { alert("Informe uma quantidade válida (mínimo 1)."); return; }
 
+        const servicoVariavel = servicoId === PDV_SERVICO_VARIAVEL;
         const servico = cacheServicos[servicoId];
-        let totalCusto = 0, dimensionStr = "";
+        let totalCusto = 0, dimensionStr = "", nomeServico = "", codigoServico = "";
+        let precoUnitario = 0, tipoServico = 'cadastrado', descricaoVariavel = '';
 
-        if (servico.tipo === 'm2') {
+        if (servicoVariavel) {
+            descricaoVariavel = document.getElementById('pdv-servico-variavel-descricao').value.trim();
+            precoUnitario = parseFloat(document.getElementById('pdv-servico-variavel-valor').value);
+            if (!descricaoVariavel) {
+                alert("Informe a descrição do serviço avulso.");
+                document.getElementById('pdv-servico-variavel-descricao').focus();
+                return;
+            }
+            if (isNaN(precoUnitario) || precoUnitario <= 0) {
+                alert("Informe um valor válido para o serviço avulso (maior que zero).");
+                document.getElementById('pdv-servico-variavel-valor').focus();
+                return;
+            }
+            nomeServico = descricaoVariavel;
+            tipoServico = 'variavel';
+            totalCusto = precoUnitario * quantidade;
+            dimensionStr = `Serviço avulso · R$ ${fmtMoeda(precoUnitario)} por unidade`;
+        } else if (!servico) {
+            alert("O serviço selecionado não está disponível. Escolha outro serviço.");
+            return;
+        } else if (servico.tipo === 'm2') {
+            precoUnitario = servico.preco;
+            nomeServico = servico.nome;
+            codigoServico = servico.codigo || '';
             const larg = parseFloat(document.getElementById('pdv-largura').value) || 1;
             const alt = parseFloat(document.getElementById('pdv-altura').value) || 1;
             totalCusto = (larg * alt) * servico.preco * quantidade;
             dimensionStr = `${larg.toFixed(2)}m x ${alt.toFixed(2)}m (${(larg*alt).toFixed(2)}m²)`;
         } else {
+            precoUnitario = servico.preco;
+            nomeServico = servico.nome;
+            codigoServico = servico.codigo || '';
             totalCusto = servico.preco * quantidade;
             dimensionStr = "Unidade Fixa";
         }
 
         let totalAdicionais = 0;
         const acabamentosSelecionados = [];
-        document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => {
-            const valor = parseFloat(el.value) || 0;
-            totalAdicionais += valor;
-            acabamentosSelecionados.push({ nome: el.dataset.nome || 'Acabamento', valor: valor });
-        });
+        if (!servicoVariavel) {
+            document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => {
+                const valor = parseFloat(el.value) || 0;
+                totalAdicionais += valor;
+                acabamentosSelecionados.push({ nome: el.dataset.nome || 'Acabamento', valor: valor });
+            });
+        }
 
         carrinhoPDV.push({
-            servico: servico.nome,
-            codigoServico: servico.codigo || '',
+            servico: nomeServico,
+            descricao: descricaoVariavel,
+            tipoServico: tipoServico,
+            precoUnitario: precoUnitario,
+            codigoServico: codigoServico,
             medidas: dimensionStr,
             qtd: quantidade,
             acabamentos: acabamentosSelecionados,
@@ -1391,10 +1469,12 @@
         // Limpa os campos do item para facilitar a inclusão do próximo
         document.getElementById('pdv-codigo').value = '';
         document.getElementById('pdv-servico').value = '';
+        document.getElementById('pdv-servico-variavel-descricao').value = '';
+        document.getElementById('pdv-servico-variavel-valor').value = '';
         document.getElementById('pdv-quantidade').value = 1;
         document.getElementById('pdv-largura').value = 1.00;
         document.getElementById('pdv-altura').value = 1.00;
-        document.getElementById('pdv-dimensoes-container').style.display = 'block';
+        document.getElementById('pdv-servico').dispatchEvent(new Event('change'));
         document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
 
         renderizarCarrinhoPDV();
@@ -1562,12 +1642,15 @@
         document.getElementById('pdv-tel').value = '';
         document.getElementById('pdv-codigo').value = '';
         document.getElementById('pdv-servico').value = '';
+        document.getElementById('pdv-servico-variavel-descricao').value = '';
+        document.getElementById('pdv-servico-variavel-valor').value = '';
         document.getElementById('pdv-quantidade').value = 1;
         document.getElementById('pdv-status').value = 'finalizado';
         document.getElementById('pdv-pagamento-tipo').value = 'total';
         document.getElementById('pdv-valor-sinal').value = '';
         document.getElementById('pdv-sinal-group').style.display = 'none';
         document.getElementById('pdv-observacao').value = '';
+        document.getElementById('pdv-servico').dispatchEvent(new Event('change'));
         document.querySelectorAll('.acabamento-check-pdv:checked').forEach(el => el.checked = false);
         renderizarCarrinhoPDV();
 
