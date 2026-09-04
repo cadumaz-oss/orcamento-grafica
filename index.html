@@ -269,6 +269,7 @@
 
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
         .count-note { font-size: 12.5px; color: var(--text-soft); font-weight: 500; }
+        .responsavel-lancamento strong { display: block; color: var(--primary); font-size: 13px; }
 
         @media print {
             body { background: #fff; padding: 0; }
@@ -610,7 +611,7 @@
 
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Data</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Pagamento</th><th>Acompanhamento do Pedido</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Data</th><th>Lançado por</th><th>Cliente / WhatsApp</th><th>Serviço Solicitado</th><th>Dimensões</th><th>Qtd</th><th>Arte Enviada</th><th>Valor Calculado</th><th>Pagamento</th><th>Acompanhamento do Pedido</th><th>Ações</th></tr></thead>
                     <tbody id="lista-orcamentos"></tbody>
                 </table>
             </div>
@@ -846,7 +847,7 @@
             <h2 style="margin-top: 26px;">🧾 Detalhamento dos Pedidos no Período</h2>
             <div style="overflow-x: auto;">
                 <table>
-            <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pagamento</th><th>Status Atual</th><th>Aberto/Novo em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
+            <thead><tr><th>Data do Pedido</th><th>Cliente</th><th>Lançado por</th><th>Serviço</th><th>Valor</th><th>Pagamento</th><th>Status Atual</th><th>Aberto/Novo em</th><th>Em Andamento em</th><th>Finalizado em</th></tr></thead>
                     <tbody id="lista-relatorio"></tbody>
                 </table>
             </div>
@@ -1255,6 +1256,42 @@
         let situacao = item.situacaoPagamento;
         if (!PAG_ROTULO[situacao]) situacao = restante <= 0.004 ? 'pago' : (pago > 0 ? 'parcial' : 'pendente');
         return { total, pago, restante, situacao };
+    }
+
+    // Identifica quem criou o pedido. O portal é público e, portanto, fica atribuído
+    // ao cliente; lançamentos feitos no PDV ficam vinculados ao usuário autenticado.
+    function dadosResponsavelLancamento(origem) {
+        if (origem === 'pdv' && perfilUsuarioAtual && auth.currentUser) {
+            return {
+                tipo: 'usuario',
+                uid: perfilUsuarioAtual.uid || auth.currentUser.uid,
+                nome: perfilUsuarioAtual.nome || auth.currentUser.email || 'Usuário interno',
+                categoria: perfilUsuarioAtual.categoria || 'usuario'
+            };
+        }
+        return {
+            tipo: 'cliente',
+            nome: 'Cliente (Portal público)',
+            descricao: 'Pedido enviado pelo portal do cliente'
+        };
+    }
+
+    function responsavelDoPedido(item) {
+        const registro = item && (item.lancadoPor || item.usuarioLancamento);
+        if (registro && typeof registro === 'object' && (registro.nome || registro.email)) {
+            return {
+                nome: registro.nome || registro.email || 'Usuário não identificado'
+            };
+        }
+        if (item && (item.lancadoPorNome || item.usuarioNome)) {
+            return { nome: item.lancadoPorNome || item.usuarioNome };
+        }
+        // Não é possível descobrir retroativamente o usuário de pedidos antigos que
+        // não guardaram essa informação. A origem conhecida continua sendo exibida.
+        if (item && item.origem === 'pdv') {
+            return { nome: 'Não identificado' };
+        }
+        return { nome: 'Cliente (Portal público)' };
     }
 
     // --- AUTENTICAÇÃO INTERNA COM CONTROLE DE CATEGORIA DE ACESSO ---
@@ -2248,6 +2285,10 @@
     }
 
     window.registrarVendaPDV = async function() {
+        if (!perfilUsuarioAtual || !auth.currentUser) {
+            alert("Faça login para registrar uma venda no PDV e permitir a identificação do usuário responsável.");
+            return;
+        }
         if (carrinhoPDV.length === 0) { alert("Adicione pelo menos um item à venda antes de registrar."); return; }
 
         const total = totalCarrinhoPDV();
@@ -2296,6 +2337,7 @@
                 ? [{ tipo: 'sinal', valor: valorPago, timestamp: Date.now() }]
                 : [],
             origem: 'pdv',
+            lancadoPor: dadosResponsavelLancamento('pdv'),
             status: statusEscolhido,
             historicoStatus: historico,
             observacao: document.getElementById('pdv-observacao').value.trim(),
@@ -2630,7 +2672,7 @@
         if (lista.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 10;
+            td.colSpan = 11;
             td.innerHTML = '<div class="empty-state">Nenhum pedido encontrado para os filtros selecionados.</div>';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -2642,6 +2684,13 @@
 
             const tdData = document.createElement('td');
             tdData.textContent = item.data;
+
+            const tdResponsavel = document.createElement('td');
+            tdResponsavel.className = 'responsavel-lancamento';
+            const responsavel = responsavelDoPedido(item);
+            const responsavelNome = document.createElement('strong');
+            responsavelNome.textContent = responsavel.nome;
+            tdResponsavel.appendChild(responsavelNome);
 
             const tdCliente = document.createElement('td');
             const badgeOrigem = item.origem === 'pdv'
@@ -2736,6 +2785,7 @@
             }
 
             tr.appendChild(tdData);
+            tr.appendChild(tdResponsavel);
             tr.appendChild(tdCliente);
             tr.appendChild(tdServico);
             tr.appendChild(tdMedidas);
@@ -2840,7 +2890,7 @@
         if (lista.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 9;
+            td.colSpan = 10;
             td.innerHTML = '<div class="empty-state">Nenhum pedido no período selecionado.</div>';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -2851,10 +2901,12 @@
             const tr = document.createElement('tr');
             const st = statusDoPedido(item);
             const pag = pagamentoDoPedido(item);
+            const responsavel = responsavelDoPedido(item);
 
             const celulas = [
                 item.data,
                 (item.origem === 'pdv' ? '🧾 ' : '🌐 ') + item.cliente,
+                responsavel.nome,
                 item.servico,
                 "R$ " + fmtMoeda(item.total)
             ];
@@ -3171,6 +3223,8 @@
             acabamentos: acabamentosSelecionados,
             totalAcabamentos: totalAdicionais,
             total: totalCusto + totalAdicionais,
+            origem: 'portal',
+            lancadoPor: dadosResponsavelLancamento('portal'),
             // Campos adicionais de acompanhamento (não substituem nenhum campo existente)
             status: 'recebido',
             historicoStatus: [{ status: 'recebido', timestamp: Date.now() }],
