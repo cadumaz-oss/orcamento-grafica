@@ -273,7 +273,7 @@
 
         @media print {
             body { background: #fff; padding: 0; }
-            .tabs, header, .filter-bar, .btn-print-report, #section-cliente-portal, #section-login, #section-pedidos, #section-servicos, #section-pdv { display: none !important; }
+            .tabs, header, .filter-bar, .btn-print-report, #section-cliente-portal, #section-login, #section-pedidos, #section-servicos, #section-configuracoes, #section-usuarios, #section-pdv { display: none !important; }
             #section-relatorios { display: block !important; }
             .card { box-shadow: none; border: none; }
             .report-box { border: 1px solid #ccc; }
@@ -372,11 +372,11 @@
         <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')" style="display:none;">🧾 PDV / Venda Rápida</button>
         <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
-        <button class="tab-btn" id="tab-conta-btn" onclick="switchTab('conta')" style="display:none;">👤 Minha Conta</button>
-        <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
+        <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Cadastro de Produtos e Serviços</button>
         <button class="tab-btn" id="tab-despesas-btn" onclick="switchTab('despesas')" style="display:none;">💸 Despesas</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
         <button class="tab-btn" id="tab-usuarios-btn" onclick="switchTab('usuarios')" style="display:none;">👥 Usuários</button>
+        <button class="tab-btn" id="tab-configuracoes-btn" onclick="switchTab('configuracoes')" style="display:none;">⚙️ Configurações</button>
     </div>
 
     <!-- 🌐 ABA 1: PORTAL DO CLIENTE -->
@@ -548,19 +548,6 @@
         </div>
     </div>
 
-    <!-- 👤 ABA: MINHA CONTA (DISPONÍVEL PARA QUALQUER USUÁRIO AUTENTICADO) -->
-    <div id="section-conta" class="system-section">
-        <div class="card" style="max-width: 560px; margin: 40px auto;">
-            <h2>🔑 Alterar Minha Senha</h2>
-            <p class="count-note" style="margin-bottom:14px;">Essa opção está disponível para administradores e usuários comuns. Por segurança, informe sua senha atual antes de definir a nova senha.</p>
-            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
-            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
-            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
-            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
-            <p class="count-note" style="margin-top:10px;">A alteração vale somente para o usuário atualmente conectado.</p>
-        </div>
-    </div>
-
     <!-- 📥 ABA 4: PEDIDOS RECEBIDOS (ACESSO LIVRE — fora da área restrita) -->
     <div id="section-pedidos" class="system-section">
         <div class="card panel-card">
@@ -618,48 +605,10 @@
         </div>
     </div>
 
-    <!-- 🛠️ ABA 5: CONFIGURAÇÃO DE SERVIÇOS (RESTRITA) -->
+    <!-- 🛠️ ABA: CADASTRO DE PRODUTOS E SERVIÇOS (RESTRITA) -->
     <div id="section-servicos" class="system-section">
         <div class="card">
-            <h2>🧭 Guias do Portal (Ativação / Desativação)</h2>
-            <p class="count-note" style="margin-bottom:14px;">Marque ou desmarque as guias públicas abaixo. A alteração é salva no sistema e vale <strong>imediatamente</strong> para todos os visitantes do site.</p>
-            <div class="form-group">
-                <label class="checkbox-item" style="background:#faf8f2; padding:12px; border-radius:10px; border:1px solid var(--border);">
-                    <input type="checkbox" id="cfg-portal-ativo" checked onchange="alternarPortalCliente(this.checked)">
-                    <span>🌐 <strong>Portal do Cliente</strong> — exibir a guia de orçamentos para os visitantes</span>
-                </label>
-            </div>
-            <p class="count-note" id="cfg-portal-status">A guia Portal do Cliente está visível para todos.</p>
-        </div>
-        <div class="card">
-            <h2>🏪 Identidade da Gráfica (Nome no Cabeçalho)</h2>
-            <div class="form-group">
-                <label>Nome da Empresa / Gráfica</label>
-                <input type="text" id="cfg-nome-grafica" placeholder="Ex: Gráfica Rápida Silva">
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>CNPJ</label>
-                    <input type="text" id="cfg-cnpj-empresa" placeholder="00.000.000/0000-00" inputmode="numeric">
-                </div>
-                <div class="form-group">
-                    <label>Telefone</label>
-                    <input type="tel" id="cfg-telefone-empresa" placeholder="(00) 00000-0000" inputmode="tel">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Endereço</label>
-                <input type="text" id="cfg-endereco-empresa" placeholder="Rua, número, bairro, cidade - UF">
-            </div>
-            <div class="form-group">
-                <label>Subtítulo do Portal (texto abaixo do nome)</label>
-                <input type="text" id="cfg-subtitulo-grafica" placeholder="Ex: Portal Público & Sistema de Gestão Interna">
-            </div>
-            <button onclick="salvarConfigGrafica()">Salvar Dados da Empresa</button>
-            <p class="count-note" style="margin-top:10px;">O nome aparece no cabeçalho. CNPJ, endereço e telefone aparecem nos comprovantes impressos.</p>
-        </div>
-        <div class="card">
-        <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
+        <h2>🛠️ Cadastro de Produtos e Serviços</h2>
             <div class="row">
                 <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
                 <div class="form-group">
@@ -679,10 +628,10 @@
                     <span>🔒 <strong>Serviço Interno</strong> — não aparece no portal do cliente (uso exclusivo no PDV / balcão)</span>
                 </label>
             </div>
-            <button onclick="cadastrarServico()">Salvar na Tabela de Preços</button>
+            <button onclick="cadastrarServico()">Salvar Produto ou Serviço</button>
         </div>
         <div class="card">
-            <h2>📋 Tabela de Preços Atual (públicos e internos)</h2>
+            <h2>📋 Catálogo de Produtos e Serviços (públicos e internos)</h2>
             <div style="overflow-x: auto;">
                 <table>
                     <thead><tr><th>Código</th><th>Serviço/Produto</th><th>Forma de Cobrança</th><th>Preço Base</th><th>Visibilidade</th><th>Ações</th></tr></thead>
@@ -854,11 +803,21 @@
         </div>
     </div>
 
-    <!-- 👥 ABA 8: USUÁRIOS E CONTROLE DE ACESSO (RESTRITA — SOMENTE ADMINISTRADOR) -->
+    <!-- 👥 ABA: USUÁRIOS, MINHA CONTA E CONTROLE DE ACESSO -->
     <div id="section-usuarios" class="system-section">
-        <div class="card">
-            <h2>👤 Cadastrar Novo Usuário</h2>
-            <p class="count-note" style="margin-bottom:14px;">Administradores têm acesso total ao painel. Usuários têm acesso apenas ao PDV e aos Pedidos Recebidos, e não podem excluir pedidos.</p>
+        <div class="card" style="max-width: 560px; margin: 0 auto 18px;">
+            <h2>🔑 Minha Conta</h2>
+            <p class="count-note" style="margin-bottom:14px;">Altere a senha da sua própria conta. Por segurança, informe sua senha atual antes de definir a nova senha.</p>
+            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
+            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
+            <p class="count-note" style="margin-top:10px;">A alteração vale somente para o usuário atualmente conectado.</p>
+        </div>
+        <div id="gestao-usuarios-admin" style="display:none;">
+            <div class="card">
+                <h2>👤 Cadastrar Novo Usuário</h2>
+            <p class="count-note" style="margin-bottom:14px;">Administradores têm acesso total ao painel. Usuários têm acesso ao PDV, aos Pedidos Recebidos e à própria conta, e não podem excluir pedidos.</p>
             <div class="row">
                 <div class="form-group"><label>Nome</label><input type="text" id="usr-nome" placeholder="Ex: Maria Souza"></div>
                 <div class="form-group"><label>E-mail de acesso</label><input type="email" id="usr-email" placeholder="usuario@grafica.com"></div>
@@ -884,7 +843,50 @@
                     <tbody id="lista-usuarios"></tbody>
                 </table>
             </div>
-            <p class="count-note" style="margin-top:12px;">"Desativar" bloqueia o acesso do usuário ao painel. "Excluir" remove definitivamente o perfil do sistema e impede novos acessos por esse usuário.</p>
+                <p class="count-note" style="margin-top:12px;">"Desativar" bloqueia o acesso do usuário ao painel. "Excluir" remove definitivamente o perfil do sistema e impede novos acessos por esse usuário.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚙️ ABA: CONFIGURAÇÕES GERAIS (RESTRITA) -->
+    <div id="section-configuracoes" class="system-section">
+        <div class="card">
+            <h2>🧭 Guias do Portal (Ativação / Desativação)</h2>
+            <p class="count-note" style="margin-bottom:14px;">Marque ou desmarque as guias públicas abaixo. A alteração é salva no sistema e vale <strong>imediatamente</strong> para todos os visitantes do site.</p>
+            <div class="form-group">
+                <label class="checkbox-item" style="background:#faf8f2; padding:12px; border-radius:10px; border:1px solid var(--border);">
+                    <input type="checkbox" id="cfg-portal-ativo" checked onchange="alternarPortalCliente(this.checked)">
+                    <span>🌐 <strong>Portal do Cliente</strong> — exibir a guia de orçamentos para os visitantes</span>
+                </label>
+            </div>
+            <p class="count-note" id="cfg-portal-status">A guia Portal do Cliente está visível para todos.</p>
+        </div>
+        <div class="card">
+            <h2>🏪 Identidade da Gráfica (Nome no Cabeçalho)</h2>
+            <div class="form-group">
+                <label>Nome da Empresa / Gráfica</label>
+                <input type="text" id="cfg-nome-grafica" placeholder="Ex: Gráfica Rápida Silva">
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>CNPJ</label>
+                    <input type="text" id="cfg-cnpj-empresa" placeholder="00.000.000/0000-00" inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" id="cfg-telefone-empresa" placeholder="(00) 00000-0000" inputmode="tel">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço</label>
+                <input type="text" id="cfg-endereco-empresa" placeholder="Rua, número, bairro, cidade - UF">
+            </div>
+            <div class="form-group">
+                <label>Subtítulo do Portal (texto abaixo do nome)</label>
+                <input type="text" id="cfg-subtitulo-grafica" placeholder="Ex: Portal Público & Sistema de Gestão Interna">
+            </div>
+            <button onclick="salvarConfigGrafica()">Salvar Dados da Empresa</button>
+            <p class="count-note" style="margin-top:10px;">O nome aparece no cabeçalho. CNPJ, endereço e telefone aparecem nos comprovantes impressos.</p>
         </div>
     </div>
 </div>
@@ -1026,7 +1028,7 @@
         const statusTxt = document.getElementById('cfg-portal-status');
         if (statusTxt) statusTxt.textContent = portalClienteAtivo
             ? 'A guia Portal do Cliente está visível para todos.'
-            : 'A guia Portal do Cliente está oculta — visitantes veem apenas o PDV e os Pedidos Recebidos.';
+            : 'A guia Portal do Cliente está oculta — visitantes são direcionados ao Acesso Restrito. O PDV e os Pedidos Recebidos exigem login.';
         // Se a guia desativada estiver aberta no momento, redireciona para o PDV
         if (!portalClienteAtivo && document.getElementById('section-cliente-portal').style.display !== 'none') {
             switchTab('pdv');
@@ -1384,11 +1386,13 @@
 
         document.getElementById('tab-pdv-btn').style.display = perfil ? 'block' : 'none';
         document.getElementById('tab-pedidos-btn').style.display = perfil ? 'block' : 'none';
-        document.getElementById('tab-conta-btn').style.display = perfil ? 'block' : 'none';
+        document.getElementById('tab-usuarios-btn').style.display = perfil ? 'block' : 'none';
         document.getElementById('tab-servicos-btn').style.display = admin ? 'block' : 'none';
         document.getElementById('tab-despesas-btn').style.display = admin ? 'block' : 'none';
         document.getElementById('tab-relatorios-btn').style.display = admin ? 'block' : 'none';
-        document.getElementById('tab-usuarios-btn').style.display = admin ? 'block' : 'none';
+        document.getElementById('tab-configuracoes-btn').style.display = admin ? 'block' : 'none';
+        const gestaoUsuarios = document.getElementById('gestao-usuarios-admin');
+        if (gestaoUsuarios) gestaoUsuarios.style.display = admin ? 'block' : 'none';
 
         if (perfil) {
             loginBtn.style.display = 'none';
@@ -1669,11 +1673,14 @@
     }
 
     // --- NAVEGAÇÃO DE ABAS ---
-    // Abas restritas por categoria de acesso: 'usuario' pode ver pdv/pedidos/conta; visitante deslogado só vê cliente-portal/login
-    const ABAS_SOMENTE_ADMIN = ['servicos', 'despesas', 'relatorios', 'usuarios'];
-    const ABAS_LOGADAS = ['pdv', 'pedidos', 'conta'].concat(ABAS_SOMENTE_ADMIN);
+    // Usuários autenticados podem abrir Usuários para acessar Minha Conta.
+    // O gerenciamento de perfis, produtos, despesas, relatórios e configurações é admin-only.
+    const ABAS_SOMENTE_ADMIN = ['servicos', 'despesas', 'relatorios', 'configuracoes'];
+    const ABAS_LOGADAS = ['pdv', 'pedidos', 'usuarios'].concat(ABAS_SOMENTE_ADMIN);
 
     window.switchTab = function(tab) {
+        // Compatibilidade com links antigos que ainda apontem para a guia Minha Conta.
+        if (tab === 'conta') tab = 'usuarios';
         // Se a guia Portal do Cliente estiver desativada, qualquer navegação para ela é desviada ao PDV (se logado) ou ao login
         if (tab === 'cliente-portal' && !portalClienteAtivo) tab = auth.currentUser ? 'pdv' : 'login';
 
