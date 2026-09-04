@@ -638,16 +638,7 @@
             <p class="count-note" style="margin-top:10px;">O nome aparece no cabeçalho. CNPJ, endereço e telefone aparecem nos comprovantes impressos.</p>
         </div>
         <div class="card">
-            <h2>🔑 Alterar Senha de Acesso</h2>
-            <p class="count-note" style="margin-bottom:14px;">Por segurança, informe sua senha atual antes de definir a nova senha de acesso ao painel.</p>
-            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
-            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
-            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
-            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
-            <p class="count-note" style="margin-top:10px;">Após alterar, use a nova senha no próximo acesso ao painel administrativo.</p>
-        </div>
-        <div class="card">
-            <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
+        <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
             <div class="row">
                 <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
                 <div class="form-group">
@@ -845,6 +836,15 @@
     <!-- 👥 ABA 8: USUÁRIOS E CONTROLE DE ACESSO (RESTRITA — SOMENTE ADMINISTRADOR) -->
     <div id="section-usuarios" class="system-section">
         <div class="card">
+            <h2>🔑 Alterar Minha Senha de Acesso</h2>
+            <p class="count-note" style="margin-bottom:14px;">Por segurança, informe sua senha atual antes de definir a nova senha de acesso ao painel.</p>
+            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
+            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
+            <p class="count-note" style="margin-top:10px;">A alteração vale para o usuário atualmente conectado.</p>
+        </div>
+        <div class="card">
             <h2>👤 Cadastrar Novo Usuário</h2>
             <p class="count-note" style="margin-bottom:14px;">Administradores têm acesso total ao painel. Usuários têm acesso apenas ao PDV e aos Pedidos Recebidos, e não podem excluir pedidos.</p>
             <div class="row">
@@ -872,7 +872,7 @@
                     <tbody id="lista-usuarios"></tbody>
                 </table>
             </div>
-            <p class="count-note" style="margin-top:12px;">"Desativar" bloqueia o acesso do usuário ao painel imediatamente. A conta de login em si só é removida definitivamente pelo Firebase Console.</p>
+            <p class="count-note" style="margin-top:12px;">"Desativar" bloqueia o acesso do usuário ao painel. "Excluir" remove definitivamente o perfil do sistema e impede novos acessos por esse usuário.</p>
         </div>
     </div>
 </div>
@@ -1455,6 +1455,14 @@
                 btnToggle.textContent = ativo ? 'Desativar' : 'Reativar';
                 btnToggle.onclick = function() { alternarStatusUsuario(u.id, !ativo); };
                 tdAcoes.appendChild(btnToggle);
+
+                const btnExcluir = document.createElement('button');
+                btnExcluir.className = 'btn-del';
+                btnExcluir.textContent = 'Excluir';
+                btnExcluir.title = 'Excluir definitivamente o perfil deste usuário';
+                btnExcluir.style.marginLeft = '6px';
+                btnExcluir.onclick = function() { excluirUsuario(u.id, u.nome, u.email); };
+                tdAcoes.appendChild(btnExcluir);
             }
 
             tr.appendChild(tdNome);
@@ -1519,6 +1527,28 @@
             await updateDoc(doc(db, 'usuarios', uid), { ativo: novoStatusAtivo });
         } catch (e) {
             alert("Não foi possível atualizar a situação do usuário.");
+        }
+    }
+
+    window.excluirUsuario = async function(uid, nome, email) {
+        if (!perfilUsuarioAtual || perfilUsuarioAtual.categoria !== 'administrador') {
+            alert("Somente administradores podem excluir usuários.");
+            return;
+        }
+        if (auth.currentUser && uid === auth.currentUser.uid) {
+            alert("Você não pode excluir o próprio usuário.");
+            return;
+        }
+
+        const identificacao = nome || email || 'este usuário';
+        if (!confirm(`Excluir definitivamente o usuário "${identificacao}"?\n\nEssa ação removerá o perfil do sistema e não poderá ser desfeita.`)) return;
+
+        try {
+            await deleteDoc(doc(db, 'usuarios', uid));
+            alert("Usuário excluído com sucesso.");
+        } catch (e) {
+            console.error("Falha ao excluir usuário:", e);
+            alert("Não foi possível excluir o usuário. Verifique sua conexão e as permissões do Firebase.");
         }
     }
 
