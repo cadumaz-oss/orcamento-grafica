@@ -369,6 +369,7 @@
         <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')" style="display:none;">🧾 PDV / Venda Rápida</button>
         <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
+        <button class="tab-btn" id="tab-conta-btn" onclick="switchTab('conta')" style="display:none;">👤 Minha Conta</button>
         <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
         <button class="tab-btn" id="tab-despesas-btn" onclick="switchTab('despesas')" style="display:none;">💸 Despesas</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
@@ -537,6 +538,19 @@
             <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
             <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
             <button onclick="login()">Entrar no Painel Administrativo</button>
+        </div>
+    </div>
+
+    <!-- 👤 ABA: MINHA CONTA (DISPONÍVEL PARA QUALQUER USUÁRIO AUTENTICADO) -->
+    <div id="section-conta" class="system-section">
+        <div class="card" style="max-width: 560px; margin: 40px auto;">
+            <h2>🔑 Alterar Minha Senha</h2>
+            <p class="count-note" style="margin-bottom:14px;">Essa opção está disponível para administradores e usuários comuns. Por segurança, informe sua senha atual antes de definir a nova senha.</p>
+            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
+            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
+            <p class="count-note" style="margin-top:10px;">A alteração vale somente para o usuário atualmente conectado.</p>
         </div>
     </div>
 
@@ -835,15 +849,6 @@
 
     <!-- 👥 ABA 8: USUÁRIOS E CONTROLE DE ACESSO (RESTRITA — SOMENTE ADMINISTRADOR) -->
     <div id="section-usuarios" class="system-section">
-        <div class="card">
-            <h2>🔑 Alterar Minha Senha de Acesso</h2>
-            <p class="count-note" style="margin-bottom:14px;">Por segurança, informe sua senha atual antes de definir a nova senha de acesso ao painel.</p>
-            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
-            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
-            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
-            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
-            <p class="count-note" style="margin-top:10px;">A alteração vale para o usuário atualmente conectado.</p>
-        </div>
         <div class="card">
             <h2>👤 Cadastrar Novo Usuário</h2>
             <p class="count-note" style="margin-bottom:14px;">Administradores têm acesso total ao painel. Usuários têm acesso apenas ao PDV e aos Pedidos Recebidos, e não podem excluir pedidos.</p>
@@ -1312,6 +1317,7 @@
 
         document.getElementById('tab-pdv-btn').style.display = perfil ? 'block' : 'none';
         document.getElementById('tab-pedidos-btn').style.display = perfil ? 'block' : 'none';
+        document.getElementById('tab-conta-btn').style.display = perfil ? 'block' : 'none';
         document.getElementById('tab-servicos-btn').style.display = admin ? 'block' : 'none';
         document.getElementById('tab-despesas-btn').style.display = admin ? 'block' : 'none';
         document.getElementById('tab-relatorios-btn').style.display = admin ? 'block' : 'none';
@@ -1556,9 +1562,9 @@
     }
 
     // --- NAVEGAÇÃO DE ABAS ---
-    // Abas restritas por categoria de acesso: 'usuario' só pode ver pdv/pedidos; visitante deslogado só vê cliente-portal/login
+    // Abas restritas por categoria de acesso: 'usuario' pode ver pdv/pedidos/conta; visitante deslogado só vê cliente-portal/login
     const ABAS_SOMENTE_ADMIN = ['servicos', 'despesas', 'relatorios', 'usuarios'];
-    const ABAS_LOGADAS = ['pdv', 'pedidos'].concat(ABAS_SOMENTE_ADMIN);
+    const ABAS_LOGADAS = ['pdv', 'pedidos', 'conta'].concat(ABAS_SOMENTE_ADMIN);
 
     window.switchTab = function(tab) {
         // Se a guia Portal do Cliente estiver desativada, qualquer navegação para ela é desviada ao PDV (se logado) ou ao login
