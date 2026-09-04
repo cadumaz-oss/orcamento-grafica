@@ -1403,10 +1403,13 @@
         const tbody = document.getElementById('lista-usuarios');
         if (!tbody) return;
         tbody.innerHTML = '';
+        const usuariosVisiveis = cacheUsuarios.filter(u =>
+            (u.email || '').trim().toLowerCase() !== 'admin@admin.com.br'
+        );
         const contagem = document.getElementById('usuarios-count');
-        if (contagem) contagem.textContent = `(${cacheUsuarios.length} usuário${cacheUsuarios.length === 1 ? '' : 's'})`;
+        if (contagem) contagem.textContent = `(${usuariosVisiveis.length} usuário${usuariosVisiveis.length === 1 ? '' : 's'})`;
 
-        if (cacheUsuarios.length === 0) {
+        if (usuariosVisiveis.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
             td.colSpan = 5;
@@ -1416,7 +1419,7 @@
             return;
         }
 
-        cacheUsuarios.forEach(u => {
+        usuariosVisiveis.forEach(u => {
             const tr = document.createElement('tr');
             const ehVoceMesmo = !!auth.currentUser && u.id === auth.currentUser.uid;
             const admin = u.categoria === 'administrador';
