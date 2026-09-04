@@ -1409,6 +1409,10 @@
             perfilUsuarioAtual = perfil;
             aplicarPermissoesUI(perfil);
             carregarListaUsuarios();
+            // A lista de pedidos pode ter sido renderizada antes do retorno do perfil.
+            // Re-renderiza após autenticar para liberar o botão de exclusão do administrador.
+            renderizarPedidos();
+            renderizarRelatorio();
 
             if (loginEmAndamento) {
                 alert("Acesso autorizado! Bem-vindo(a), " + (perfil.nome || perfil.email) + ".");
@@ -1420,6 +1424,8 @@
             if (unsubscribeUsuarios) { unsubscribeUsuarios(); unsubscribeUsuarios = null; }
             cacheUsuarios = [];
             aplicarPermissoesUI(null);
+            // Ao sair, remove imediatamente as ações administrativas da listagem.
+            renderizarPedidos();
         }
     });
 
@@ -2476,6 +2482,33 @@
         }
     }
 
+    // ===== EXCLUSÃO DE PEDIDOS (SOMENTE ADMINISTRADOR) =====
+    // A ação é separada das demais exclusões para deixar explícito o controle
+    // de acesso e remover também o acompanhamento público do pedido excluído.
+    window.excluirPedido = async function(pedido) {
+        if (!perfilUsuarioAtual || perfilUsuarioAtual.categoria !== 'administrador') {
+            alert("Somente administradores podem excluir pedidos.");
+            return;
+        }
+        if (!pedido || !pedido.id) return;
+
+        const identificacao = pedido.cliente || pedido.servico || 'este pedido';
+        if (!confirm(`Excluir definitivamente o pedido de "${identificacao}"?\n\nEssa ação removerá o pedido da guia e não poderá ser desfeita.`)) return;
+
+        try {
+            const batch = writeBatch(db);
+            batch.delete(doc(db, 'vendas', pedido.id));
+            if (pedido.acompanhamentoToken) {
+                batch.delete(doc(db, 'acompanhamentos', pedido.acompanhamentoToken));
+            }
+            await batch.commit();
+            alert("Pedido excluído com sucesso.");
+        } catch (e) {
+            console.error("Falha ao excluir pedido:", e);
+            alert("Não foi possível excluir o pedido. Verifique sua conexão e as permissões do Firebase.");
+        }
+    }
+
     window.toggleHistorico = function(el) {
         const lista = el.parentElement.querySelector('.history-list');
         if (lista) lista.classList.toggle('open');
@@ -2694,8 +2727,9 @@
             if (perfilUsuarioAtual && perfilUsuarioAtual.categoria === 'administrador') {
                 const btnDel = document.createElement('button');
                 btnDel.className = 'btn-del';
-                btnDel.textContent = 'Remover';
-                btnDel.onclick = function() { deletarBD('vendas', item.id); };
+                btnDel.textContent = 'Excluir pedido';
+                btnDel.title = 'Excluir definitivamente este pedido e seu acompanhamento público';
+                btnDel.onclick = function() { excluirPedido(item); };
                 tdAcoes.appendChild(btnDel);
             } else {
                 tdAcoes.innerHTML = '<small style="color:#94a3b8;" title="Somente administradores podem excluir pedidos">🔒 Exclusão restrita</small>';
