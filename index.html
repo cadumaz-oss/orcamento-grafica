@@ -366,12 +366,13 @@
     <!-- NAVEGAÇÃO PRINCIPAL: guias públicas + acesso restrito -->
     <div class="tabs">
         <button class="tab-btn active" id="tab-cliente-portal-btn" onclick="switchTab('cliente-portal')">🌐 Portal do Cliente</button>
-        <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')">🧾 PDV / Venda Rápida</button>
-        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')">📥 Pedidos Recebidos</button>
+        <button class="tab-btn" id="tab-pdv-btn" onclick="switchTab('pdv')" style="display:none;">🧾 PDV / Venda Rápida</button>
+        <button class="tab-btn" id="tab-pedidos-btn" onclick="switchTab('pedidos')" style="display:none;">📥 Pedidos Recebidos</button>
         <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">🔐 Acesso Restrito</button>
         <button class="tab-btn" id="tab-servicos-btn" onclick="switchTab('servicos')" style="display:none;">🛠️ Configurar Preços</button>
         <button class="tab-btn" id="tab-despesas-btn" onclick="switchTab('despesas')" style="display:none;">💸 Despesas</button>
         <button class="tab-btn" id="tab-relatorios-btn" onclick="switchTab('relatorios')" style="display:none;">📈 Relatórios Gerenciais</button>
+        <button class="tab-btn" id="tab-usuarios-btn" onclick="switchTab('usuarios')" style="display:none;">👥 Usuários</button>
     </div>
 
     <!-- 🌐 ABA 1: PORTAL DO CLIENTE -->
@@ -637,6 +638,15 @@
             <p class="count-note" style="margin-top:10px;">O nome aparece no cabeçalho. CNPJ, endereço e telefone aparecem nos comprovantes impressos.</p>
         </div>
         <div class="card">
+            <h2>🔑 Alterar Senha de Acesso</h2>
+            <p class="count-note" style="margin-bottom:14px;">Por segurança, informe sua senha atual antes de definir a nova senha de acesso ao painel.</p>
+            <div class="form-group"><label>Senha Atual</label><input type="password" id="cfg-senha-atual" placeholder="******" autocomplete="current-password"></div>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+            <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cfg-senha-confirmar" placeholder="Repita a nova senha" autocomplete="new-password"></div>
+            <button onclick="alterarSenhaUsuario()">Salvar Nova Senha</button>
+            <p class="count-note" style="margin-top:10px;">Após alterar, use a nova senha no próximo acesso ao painel administrativo.</p>
+        </div>
+        <div class="card">
             <h2>🛠️ Cadastrar Novo Serviço ou Mudar Preços</h2>
             <div class="row">
                 <div class="form-group"><label>Nome do Serviço (Ex: Banner em Lona)</label><input type="text" id="s-nome"></div>
@@ -831,6 +841,40 @@
             </div>
         </div>
     </div>
+
+    <!-- 👥 ABA 8: USUÁRIOS E CONTROLE DE ACESSO (RESTRITA — SOMENTE ADMINISTRADOR) -->
+    <div id="section-usuarios" class="system-section">
+        <div class="card">
+            <h2>👤 Cadastrar Novo Usuário</h2>
+            <p class="count-note" style="margin-bottom:14px;">Administradores têm acesso total ao painel. Usuários têm acesso apenas ao PDV e aos Pedidos Recebidos, e não podem excluir pedidos.</p>
+            <div class="row">
+                <div class="form-group"><label>Nome</label><input type="text" id="usr-nome" placeholder="Ex: Maria Souza"></div>
+                <div class="form-group"><label>E-mail de acesso</label><input type="email" id="usr-email" placeholder="usuario@grafica.com"></div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Senha Provisória</label><input type="password" id="usr-senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+                <div class="form-group">
+                    <label>Categoria de Acesso</label>
+                    <select id="usr-categoria">
+                        <option value="usuario">Usuário — PDV e Pedidos Recebidos</option>
+                        <option value="administrador">Administrador — Acesso Total</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="cadastrarUsuario()">Cadastrar Usuário</button>
+            <p class="count-note" style="margin-top:10px;">O cadastro não afeta a sua sessão atual: você continua logado normalmente após criar o novo usuário.</p>
+        </div>
+        <div class="card panel-card">
+            <h2>📋 Usuários Cadastrados <span class="count-note" id="usuarios-count"></span></h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Nome</th><th>E-mail</th><th>Categoria</th><th>Situação</th><th>Ações</th></tr></thead>
+                    <tbody id="lista-usuarios"></tbody>
+                </table>
+            </div>
+            <p class="count-note" style="margin-top:12px;">"Desativar" bloqueia o acesso do usuário ao painel imediatamente. A conta de login em si só é removida definitivamente pelo Firebase Console.</p>
+        </div>
+    </div>
 </div>
 
 <!-- ÁREA DE IMPRESSÃO DO COMPROVANTE DO CLIENTE (oculta na tela, usada apenas na impressão) -->
@@ -862,8 +906,8 @@
 <!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, setDoc, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // CONFIGURAÇÕES DO FIREBASE CONECTADAS (inalteradas)
     const firebaseConfig = {
@@ -878,8 +922,19 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    // App Firebase secundária: usada exclusivamente para CRIAR novos usuários sem derrubar a sessão do administrador logado
+    // (o SDK do Firebase Auth loga automaticamente no usuário recém-criado na instância em que ele foi criado)
+    const appSecundario = initializeApp(firebaseConfig, "SecundarioCadastro");
+    const authSecundario = getAuth(appSecundario);
+
     const tokenAcompanhamento = new URLSearchParams(window.location.search).get('acompanhar');
     const modoAcompanhamento = Boolean(tokenAcompanhamento && tokenAcompanhamento.trim());
+
+    // ===== CONTROLE DE ACESSO POR CATEGORIA DE USUÁRIO =====
+    const USUARIOS_COL = collection(db, 'usuarios');
+    let perfilUsuarioAtual = null; // { nome, email, categoria: 'administrador' | 'usuario', ativo }
+    let cacheUsuarios = []; // cache local da lista de usuários (para o painel de gestão)
 
     let cacheServicos = {};
     let orcamentoAtual = null;
@@ -1191,18 +1246,20 @@
         return { total, pago, restante, situacao };
     }
 
-    // --- AUTENTICAÇÃO INTERNA (inalterada) ---
+    // --- AUTENTICAÇÃO INTERNA COM CONTROLE DE CATEGORIA DE ACESSO ---
+    let loginEmAndamento = false;
+
     window.login = function() {
         const email = document.getElementById('login-email').value;
         const senha = document.getElementById('login-senha').value;
         if(!email || !senha) { alert("Preencha o e-mail e senha."); return; }
 
+        loginEmAndamento = true;
         signInWithEmailAndPassword(auth, email, senha)
-            .then(() => {
-                alert("Acesso autorizado!");
-                switchTab('pedidos');
-            })
-            .catch(e => alert("Acesso negado: dados incorretos ou erro de conexão."));
+            .catch(e => {
+                loginEmAndamento = false;
+                alert("Acesso negado: dados incorretos ou erro de conexão.");
+            });
     }
 
     window.logoutProcess = function() {
@@ -1211,30 +1268,274 @@
         });
     }
 
-    if (!modoAcompanhamento) onAuthStateChanged(auth, (user) => {
+    // Busca a categoria de acesso do usuário logado em 'usuarios/{uid}'.
+    // Se ainda não existir NENHUM usuário cadastrado no sistema, o primeiro login vira Administrador automaticamente (bootstrap).
+    // Se o usuário não tiver um perfil configurado (ou estiver desativado), o acesso é negado e a sessão é encerrada.
+    async function carregarOuCriarPerfil(user) {
+        try {
+            const ref = doc(db, 'usuarios', user.uid);
+            const snap = await getDoc(ref);
+
+            if (snap.exists()) {
+                const dados = snap.data();
+                if (dados.ativo === false) {
+                    alert("Seu acesso foi desativado. Fale com o administrador do sistema.");
+                    await signOut(auth);
+                    return null;
+                }
+                return { uid: user.uid, email: user.email, nome: dados.nome || user.email, categoria: dados.categoria === 'administrador' ? 'administrador' : 'usuario' };
+            }
+
+            const todos = await getDocs(USUARIOS_COL);
+            if (todos.empty) {
+                const perfilInicial = { nome: user.email, email: user.email, categoria: 'administrador', ativo: true, criadoEm: Date.now() };
+                await setDoc(ref, perfilInicial);
+                return { uid: user.uid, ...perfilInicial };
+            }
+
+            alert("Seu usuário não possui uma categoria de acesso configurada. Fale com o administrador do sistema.");
+            await signOut(auth);
+            return null;
+        } catch (e) {
+            console.error("Falha ao carregar perfil do usuário:", e);
+            alert("Não foi possível verificar suas permissões de acesso agora. Verifique sua conexão e tente novamente.");
+            await signOut(auth);
+            return null;
+        }
+    }
+
+    // Aplica visibilidade das abas conforme a categoria do usuário (ou visitante deslogado)
+    function aplicarPermissoesUI(perfil) {
         const loginBtn = document.getElementById('tab-login-btn');
         const statusArea = document.getElementById('auth-status-area');
+        const admin = !!perfil && perfil.categoria === 'administrador';
 
-        if (user) {
+        document.getElementById('tab-pdv-btn').style.display = perfil ? 'block' : 'none';
+        document.getElementById('tab-pedidos-btn').style.display = perfil ? 'block' : 'none';
+        document.getElementById('tab-servicos-btn').style.display = admin ? 'block' : 'none';
+        document.getElementById('tab-despesas-btn').style.display = admin ? 'block' : 'none';
+        document.getElementById('tab-relatorios-btn').style.display = admin ? 'block' : 'none';
+        document.getElementById('tab-usuarios-btn').style.display = admin ? 'block' : 'none';
+
+        if (perfil) {
             loginBtn.style.display = 'none';
-            document.getElementById('tab-servicos-btn').style.display = 'block';
-            document.getElementById('tab-despesas-btn').style.display = 'block';
-            document.getElementById('tab-relatorios-btn').style.display = 'block';
-            statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">Painel Conectado (${user.email})</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
+            const rotuloCategoria = admin ? 'Administrador' : 'Usuário';
+            statusArea.innerHTML = `<span style="color:#d4af37; font-weight:600; font-size:14px; margin-right:10px;">${escapeHtml(perfil.nome || perfil.email)} · ${rotuloCategoria}</span> <button class="btn-logout" onclick="logoutProcess()">Sair</button>`;
         } else {
             loginBtn.style.display = 'block';
-            document.getElementById('tab-servicos-btn').style.display = 'none';
-            document.getElementById('tab-despesas-btn').style.display = 'none';
-            document.getElementById('tab-relatorios-btn').style.display = 'none';
             statusArea.innerHTML = `<span id="user-display" style="color:#c8bfa5; font-size: 14px;">Painel Restrito Fechado</span>`;
-            switchTab('cliente-portal');
+            // Sem login: só é permitido ficar no Portal do Cliente (quando ativo) ou na tela de login
+            switchTab(portalClienteAtivo ? 'cliente-portal' : 'login');
+        }
+    }
+
+    // ===== ALTERAR SENHA DO USUÁRIO LOGADO (ÁREA RESTRITA) =====
+    window.alterarSenhaUsuario = async function() {
+        const senhaAtual = document.getElementById('cfg-senha-atual').value;
+        const senhaNova = document.getElementById('cfg-senha-nova').value;
+        const senhaConfirmar = document.getElementById('cfg-senha-confirmar').value;
+
+        if (!auth.currentUser) { alert("Você precisa estar logado para alterar a senha."); return; }
+        if (!senhaAtual || !senhaNova || !senhaConfirmar) { alert("Preencha a senha atual e a nova senha (com confirmação)."); return; }
+        if (senhaNova.length < 6) { alert("A nova senha deve ter pelo menos 6 caracteres."); return; }
+        if (senhaNova !== senhaConfirmar) { alert("A nova senha e a confirmação não coincidem."); return; }
+        if (senhaNova === senhaAtual) { alert("A nova senha deve ser diferente da senha atual."); return; }
+
+        try {
+            // Reautentica antes de alterar a senha (exigência do Firebase Auth por segurança)
+            const credential = EmailAuthProvider.credential(auth.currentUser.email, senhaAtual);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+            await updatePassword(auth.currentUser, senhaNova);
+
+            alert("Senha alterada com sucesso!");
+            document.getElementById('cfg-senha-atual').value = '';
+            document.getElementById('cfg-senha-nova').value = '';
+            document.getElementById('cfg-senha-confirmar').value = '';
+        } catch (e) {
+            console.error("Falha ao alterar senha:", e);
+            if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+                alert("Senha atual incorreta. Tente novamente.");
+            } else if (e.code === 'auth/too-many-requests') {
+                alert("Muitas tentativas. Aguarde um instante e tente novamente.");
+            } else if (e.code === 'auth/requires-recent-login') {
+                alert("Por segurança, saia e entre novamente antes de alterar a senha.");
+            } else {
+                alert("Não foi possível alterar a senha. Verifique sua conexão e tente novamente.");
+            }
+        }
+    }
+
+    if (!modoAcompanhamento) onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const perfil = await carregarOuCriarPerfil(user);
+            if (!perfil) { loginEmAndamento = false; return; } // acesso negado — já deslogado dentro de carregarOuCriarPerfil
+
+            perfilUsuarioAtual = perfil;
+            aplicarPermissoesUI(perfil);
+            carregarListaUsuarios();
+
+            if (loginEmAndamento) {
+                alert("Acesso autorizado! Bem-vindo(a), " + (perfil.nome || perfil.email) + ".");
+                switchTab(perfil.categoria === 'administrador' ? 'pedidos' : 'pdv');
+                loginEmAndamento = false;
+            }
+        } else {
+            perfilUsuarioAtual = null;
+            if (unsubscribeUsuarios) { unsubscribeUsuarios(); unsubscribeUsuarios = null; }
+            cacheUsuarios = [];
+            aplicarPermissoesUI(null);
         }
     });
 
+    // ===== GESTÃO DE USUÁRIOS E CATEGORIAS DE ACESSO (SOMENTE ADMINISTRADOR) =====
+    let unsubscribeUsuarios = null;
+
+    function carregarListaUsuarios() {
+        if (!perfilUsuarioAtual || perfilUsuarioAtual.categoria !== 'administrador') return;
+        if (unsubscribeUsuarios) return; // já está escutando em tempo real
+        unsubscribeUsuarios = onSnapshot(USUARIOS_COL, (snap) => {
+            cacheUsuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderizarListaUsuarios();
+        }, (e) => console.error('Falha ao carregar lista de usuários:', e));
+    }
+
+    function renderizarListaUsuarios() {
+        const tbody = document.getElementById('lista-usuarios');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const contagem = document.getElementById('usuarios-count');
+        if (contagem) contagem.textContent = `(${cacheUsuarios.length} usuário${cacheUsuarios.length === 1 ? '' : 's'})`;
+
+        if (cacheUsuarios.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 5;
+            td.innerHTML = '<div class="empty-state">Nenhum usuário cadastrado ainda.</div>';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        cacheUsuarios.forEach(u => {
+            const tr = document.createElement('tr');
+            const ehVoceMesmo = !!auth.currentUser && u.id === auth.currentUser.uid;
+            const admin = u.categoria === 'administrador';
+            const ativo = u.ativo !== false;
+
+            const tdNome = document.createElement('td');
+            tdNome.innerHTML = escapeHtml(u.nome || '—') + (ehVoceMesmo ? ' <span class="badge">Você</span>' : '');
+
+            const tdEmail = document.createElement('td');
+            tdEmail.textContent = u.email || '—';
+
+            const tdCategoria = document.createElement('td');
+            const selectCategoria = document.createElement('select');
+            selectCategoria.style.cssText = 'width:auto; padding:6px 8px; font-size:13px;';
+            selectCategoria.innerHTML = `<option value="usuario"${!admin ? ' selected' : ''}>Usuário</option><option value="administrador"${admin ? ' selected' : ''}>Administrador</option>`;
+            selectCategoria.onchange = function() { mudarCategoriaUsuario(u.id, this.value); };
+            tdCategoria.appendChild(selectCategoria);
+
+            const tdSituacao = document.createElement('td');
+            const pill = document.createElement('span');
+            pill.className = 'badge';
+            pill.style.background = ativo ? '#dcfce7' : '#fee2e2';
+            pill.style.color = ativo ? 'var(--success)' : 'var(--danger)';
+            pill.textContent = ativo ? 'Ativo' : 'Desativado';
+            tdSituacao.appendChild(pill);
+
+            const tdAcoes = document.createElement('td');
+            if (ehVoceMesmo) {
+                tdAcoes.innerHTML = '<small style="color:#94a3b8;">—</small>';
+            } else {
+                const btnToggle = document.createElement('button');
+                btnToggle.className = 'btn-del';
+                btnToggle.style.cssText = ativo
+                    ? 'border-color:#f0c8c8; color:var(--danger);'
+                    : 'border-color:#bfe3d8; color:var(--success);';
+                btnToggle.textContent = ativo ? 'Desativar' : 'Reativar';
+                btnToggle.onclick = function() { alternarStatusUsuario(u.id, !ativo); };
+                tdAcoes.appendChild(btnToggle);
+            }
+
+            tr.appendChild(tdNome);
+            tr.appendChild(tdEmail);
+            tr.appendChild(tdCategoria);
+            tr.appendChild(tdSituacao);
+            tr.appendChild(tdAcoes);
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.cadastrarUsuario = async function() {
+        const nome = document.getElementById('usr-nome').value.trim();
+        const email = document.getElementById('usr-email').value.trim();
+        const senha = document.getElementById('usr-senha').value;
+        const categoria = document.getElementById('usr-categoria').value === 'administrador' ? 'administrador' : 'usuario';
+
+        if (!nome || !email || !senha) { alert("Preencha nome, e-mail e senha."); return; }
+        if (senha.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
+
+        try {
+            // Cria o login na instância SECUNDÁRIA do Firebase Auth para não derrubar a sua sessão de administrador
+            const cred = await createUserWithEmailAndPassword(authSecundario, email, senha);
+            await setDoc(doc(db, 'usuarios', cred.user.uid), {
+                nome, email, categoria, ativo: true, criadoEm: Date.now()
+            });
+            await signOut(authSecundario); // encerra a sessão temporária criada na instância secundária
+
+            alert("Usuário cadastrado com sucesso!");
+            document.getElementById('usr-nome').value = '';
+            document.getElementById('usr-email').value = '';
+            document.getElementById('usr-senha').value = '';
+            document.getElementById('usr-categoria').value = 'usuario';
+        } catch (e) {
+            console.error("Falha ao cadastrar usuário:", e);
+            if (e.code === 'auth/email-already-in-use') alert("Já existe um usuário cadastrado com esse e-mail.");
+            else if (e.code === 'auth/invalid-email') alert("E-mail inválido.");
+            else if (e.code === 'auth/weak-password') alert("Senha muito fraca. Use pelo menos 6 caracteres.");
+            else alert("Não foi possível cadastrar o usuário. Verifique sua conexão e tente novamente.");
+        }
+    }
+
+    window.mudarCategoriaUsuario = async function(uid, categoria) {
+        if (auth.currentUser && uid === auth.currentUser.uid && categoria !== 'administrador') {
+            alert("Você não pode remover a própria categoria de Administrador por aqui. Peça a outro administrador.");
+            renderizarListaUsuarios();
+            return;
+        }
+        try {
+            await updateDoc(doc(db, 'usuarios', uid), { categoria: categoria === 'administrador' ? 'administrador' : 'usuario' });
+        } catch (e) {
+            alert("Não foi possível atualizar a categoria do usuário.");
+        }
+    }
+
+    window.alternarStatusUsuario = async function(uid, novoStatusAtivo) {
+        if (auth.currentUser && uid === auth.currentUser.uid && !novoStatusAtivo) {
+            alert("Você não pode desativar o seu próprio acesso.");
+            return;
+        }
+        try {
+            await updateDoc(doc(db, 'usuarios', uid), { ativo: novoStatusAtivo });
+        } catch (e) {
+            alert("Não foi possível atualizar a situação do usuário.");
+        }
+    }
+
     // --- NAVEGAÇÃO DE ABAS ---
+    // Abas restritas por categoria de acesso: 'usuario' só pode ver pdv/pedidos; visitante deslogado só vê cliente-portal/login
+    const ABAS_SOMENTE_ADMIN = ['servicos', 'despesas', 'relatorios', 'usuarios'];
+    const ABAS_LOGADAS = ['pdv', 'pedidos'].concat(ABAS_SOMENTE_ADMIN);
+
     window.switchTab = function(tab) {
-        // Se a guia Portal do Cliente estiver desativada, qualquer navegação para ela é desviada ao PDV
-        if (tab === 'cliente-portal' && !portalClienteAtivo) tab = 'pdv';
+        // Se a guia Portal do Cliente estiver desativada, qualquer navegação para ela é desviada ao PDV (se logado) ou ao login
+        if (tab === 'cliente-portal' && !portalClienteAtivo) tab = auth.currentUser ? 'pdv' : 'login';
+
+        // Trava de acesso: impede abrir abas restritas sem estar logado, ou abas de administrador sendo 'usuario'
+        const admin = !!perfilUsuarioAtual && perfilUsuarioAtual.categoria === 'administrador';
+        if (ABAS_LOGADAS.includes(tab) && !auth.currentUser) tab = 'login';
+        else if (ABAS_SOMENTE_ADMIN.includes(tab) && !admin) tab = 'pdv';
+
         document.getElementById('section-cliente-portal').style.removeProperty('display');
         document.querySelectorAll('.system-section').forEach(s => s.style.display = 'none');
 
@@ -2287,14 +2588,14 @@
             tdStatus.appendChild(montarChecklist(item));
 
             const tdAcoes = document.createElement('td');
-            if (auth.currentUser) {
+            if (perfilUsuarioAtual && perfilUsuarioAtual.categoria === 'administrador') {
                 const btnDel = document.createElement('button');
                 btnDel.className = 'btn-del';
                 btnDel.textContent = 'Remover';
                 btnDel.onclick = function() { deletarBD('vendas', item.id); };
                 tdAcoes.appendChild(btnDel);
             } else {
-                tdAcoes.innerHTML = '<small style="color:#94a3b8;" title="Entre no Acesso Restrito para excluir pedidos">🔒 Exclusão restrita</small>';
+                tdAcoes.innerHTML = '<small style="color:#94a3b8;" title="Somente administradores podem excluir pedidos">🔒 Exclusão restrita</small>';
             }
 
             tr.appendChild(tdData);
@@ -2673,6 +2974,11 @@
     }
 
     window.deletarBD = async function(colecao, id) {
+        // Trava de segurança extra: exclusões só são permitidas para Administradores, mesmo se chamadas fora dos botões da tela
+        if (!perfilUsuarioAtual || perfilUsuarioAtual.categoria !== 'administrador') {
+            alert("Somente administradores podem excluir registros.");
+            return;
+        }
         if(confirm("Deseja mesmo remover esse registro do sistema?")) {
             await deleteDoc(doc(db, colecao, id));
         }
