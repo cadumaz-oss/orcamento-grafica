@@ -95,6 +95,8 @@
         .btn-logout:hover { background: rgba(255,255,255,0.22); box-shadow: none; }
         .btn-del { background: transparent; color: var(--danger); padding: 5px 10px; font-size: 12px; border-radius: 6px; width: auto; cursor: pointer; border: 1px solid #f0c8c8; font-weight: 600; }
         .btn-del:hover { background: #fef2f2; box-shadow: none; }
+        .btn-password { background: transparent; color: var(--info); padding: 5px 10px; font-size: 12px; border-radius: 6px; width: auto; cursor: pointer; border: 1px solid #c7d8f8; font-weight: 600; }
+        .btn-password:hover { background: #eff6ff; box-shadow: none; }
 
         .panel-card { grid-column: 1 / -1; }
         .system-section { display: none; grid-column: 1 / -1; }
@@ -538,6 +540,10 @@
             <div class="form-group"><label>E-mail Corporativo</label><input type="email" id="login-email" placeholder="admin@grafica.com"></div>
             <div class="form-group"><label>Senha</label><input type="password" id="login-senha" placeholder="******"></div>
             <button onclick="login()">Entrar no Painel Administrativo</button>
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
+                <p class="count-note" style="margin-bottom:8px;">Esqueceu sua senha? Informe seu e-mail acima para receber um link de recuperação.</p>
+                <button type="button" class="btn-password" style="width:auto; padding:8px 14px;" onclick="recuperarSenhaLogin()">🔑 Recuperar senha</button>
+            </div>
         </div>
     </div>
 
@@ -911,7 +917,7 @@
 <!-- INICIALIZAÇÃO FIREBASE MÓDULOS -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, setDoc, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // CONFIGURAÇÕES DO FIREBASE CONECTADAS (inalteradas)
@@ -1267,6 +1273,30 @@
             });
     }
 
+    window.recuperarSenhaLogin = async function() {
+        const campoEmail = document.getElementById('login-email');
+        const email = campoEmail.value.trim();
+
+        if (!email) {
+            alert("Informe seu e-mail corporativo para receber o link de recuperação.");
+            campoEmail.focus();
+            return;
+        }
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert("Se existir uma conta com este e-mail, o link de recuperação será enviado. Verifique também a pasta de spam.");
+        } catch (e) {
+            console.error("Falha ao enviar recuperação de senha:", e);
+            if (e.code === 'auth/invalid-email') {
+                alert("Informe um e-mail válido para recuperar a senha.");
+                campoEmail.focus();
+            } else {
+                alert("Não foi possível enviar o link de recuperação. Verifique sua conexão e tente novamente.");
+            }
+        }
+    }
+
     window.logoutProcess = function() {
         signOut(auth).then(() => {
             alert("Sessão encerrada!");
@@ -1453,15 +1483,21 @@
             tdSituacao.appendChild(pill);
 
             const tdAcoes = document.createElement('td');
-            if (ehVoceMesmo) {
-                tdAcoes.innerHTML = '<small style="color:#94a3b8;">—</small>';
-            } else {
+            const btnSenha = document.createElement('button');
+            btnSenha.className = 'btn-password';
+            btnSenha.textContent = 'Alterar senha';
+            btnSenha.title = 'Enviar um link para este usuário criar uma nova senha';
+            btnSenha.onclick = function() { enviarLinkAlteracaoSenha(u.email, u.nome); };
+            tdAcoes.appendChild(btnSenha);
+
+            if (!ehVoceMesmo) {
                 const btnToggle = document.createElement('button');
                 btnToggle.className = 'btn-del';
                 btnToggle.style.cssText = ativo
                     ? 'border-color:#f0c8c8; color:var(--danger);'
                     : 'border-color:#bfe3d8; color:var(--success);';
                 btnToggle.textContent = ativo ? 'Desativar' : 'Reativar';
+                btnToggle.style.marginLeft = '6px';
                 btnToggle.onclick = function() { alternarStatusUsuario(u.id, !ativo); };
                 tdAcoes.appendChild(btnToggle);
 
@@ -1481,6 +1517,34 @@
             tr.appendChild(tdAcoes);
             tbody.appendChild(tr);
         });
+    }
+
+    window.enviarLinkAlteracaoSenha = async function(email, nome) {
+        if (!perfilUsuarioAtual || perfilUsuarioAtual.categoria !== 'administrador') {
+            alert("Somente administradores podem alterar a senha de outros usuários.");
+            return;
+        }
+
+        const emailDestino = String(email || '').trim();
+        if (!emailDestino) {
+            alert("Este usuário não possui um e-mail de acesso cadastrado.");
+            return;
+        }
+
+        const identificacao = nome || emailDestino;
+        if (!confirm(`Enviar um link de alteração de senha para "${identificacao}"?\n\nO usuário receberá o link no e-mail ${emailDestino} e poderá definir uma nova senha.`)) return;
+
+        try {
+            await sendPasswordResetEmail(auth, emailDestino);
+            alert(`Link de alteração de senha enviado para ${emailDestino}.`);
+        } catch (e) {
+            console.error("Falha ao enviar link de alteração de senha:", e);
+            if (e.code === 'auth/invalid-email') {
+                alert("O e-mail cadastrado para este usuário é inválido.");
+            } else {
+                alert("Não foi possível enviar o link de alteração de senha. Verifique a conexão e o cadastro do usuário.");
+            }
+        }
     }
 
     window.cadastrarUsuario = async function() {
